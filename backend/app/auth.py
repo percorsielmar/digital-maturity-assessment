@@ -14,7 +14,7 @@ from app.database import get_db
 from app.models import Organization
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 security = HTTPBearer()
 
 def generate_access_code(length: int = 8) -> str:
