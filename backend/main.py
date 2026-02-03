@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.database import init_db, async_session
 from app.models import Question
 from app.questions_data import DIGITAL_MATURITY_QUESTIONS
-from app.routers import auth, questions, assessments
+from app.routers import auth, questions, assessments, admin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(questions.router, prefix="/api")
 app.include_router(assessments.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 async def seed_questions():
     async with async_session() as session:

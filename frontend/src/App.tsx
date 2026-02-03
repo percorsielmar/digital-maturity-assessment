@@ -5,6 +5,7 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import AssessmentPage from './components/AssessmentPage';
 import ReportPage from './components/ReportPage';
+import AdminPage from './components/AdminPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -22,6 +23,7 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route
             path="/dashboard"
             element={
