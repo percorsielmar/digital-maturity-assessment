@@ -291,7 +291,7 @@ const ReportPage: React.FC = () => {
                       labelFormatter={(label) => barData.find(d => d.category === label)?.fullCategory || label}
                     />
                     <Bar dataKey="score" name="Punteggio" stackId="a">
-                      {barData.map((entry, index) => (
+                      {barData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill="#3b82f6" />
                       ))}
                     </Bar>

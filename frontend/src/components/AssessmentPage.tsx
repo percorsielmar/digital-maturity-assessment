@@ -18,7 +18,7 @@ const AssessmentPage: React.FC = () => {
   const [answers, setAnswers] = useState<Map<number, Answer>>(new Map());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [_categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     loadQuestions();
