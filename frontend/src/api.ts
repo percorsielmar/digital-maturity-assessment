@@ -60,6 +60,15 @@ export const authApi = {
     const response = await api.get<Organization>('/auth/me');
     return response.data;
   },
+
+  googleLogin: async (credential: string) => {
+    const response = await api.post<{
+      access_token: string;
+      token_type: string;
+      organization: Organization;
+    }>('/auth/google', { credential });
+    return response.data;
+  },
 };
 
 export const questionsApi = {

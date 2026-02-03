@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Building2, ArrowRight, UserPlus } from 'lucide-react';
 import { authApi } from '../api';
 import { useAuth } from '../context/AuthContext';
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
+const GOOGLE_CLIENT_ID = '776005980883-iodb4evtm9imedvilsihmfajpauj8mrn.apps.googleusercontent.com';
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,6 +28,45 @@ const LoginPage: React.FC = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById('google-signin-button'),
+          { theme: 'outline', size: 'large', width: '100%', text: 'continue_with' }
+        );
+      }
+    };
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleGoogleResponse = async (response: any) => {
+    setError('');
+    setLoading(true);
+    try {
+      const result = await authApi.googleLogin(response.credential);
+      login(result.access_token, result.organization);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Errore durante il login con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,6 +221,17 @@ const LoginPage: React.FC = () => {
                 </>
               )}
             </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">oppure</span>
+              </div>
+            </div>
+
+            <div id="google-signin-button" className="w-full flex justify-center"></div>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
