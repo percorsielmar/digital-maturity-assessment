@@ -2,15 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
+from pydantic import BaseModel
 import os
 
 from app.database import get_db
 from app.models import Organization, Assessment
 from app.schemas import OrganizationResponse, AssessmentSummary
+from app.auth import get_password_hash
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "admin-secret-key-change-me")
+
+class PasswordResetRequest(BaseModel):
+    organization_id: int
+    new_password: str
+    admin_key: str
 
 def verify_admin_key(admin_key: str):
     if admin_key != ADMIN_SECRET:
@@ -130,4 +137,32 @@ async def get_stats(
         "completed_assessments": len(completed),
         "in_progress_assessments": len(assessments) - len(completed),
         "average_maturity_level": round(avg_maturity, 2)
+    }
+
+@router.post("/reset-password")
+async def reset_password(
+    request: PasswordResetRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    verify_admin_key(request.admin_key)
+    
+    result = await db.execute(
+        select(Organization).where(Organization.id == request.organization_id)
+    )
+    organization = result.scalar_one_or_none()
+    
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organizzazione non trovata"
+        )
+    
+    organization.hashed_password = get_password_hash(request.new_password)
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Password resettata per {organization.name}",
+        "organization_id": organization.id,
+        "access_code": organization.access_code
     }

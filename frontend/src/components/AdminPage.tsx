@@ -10,7 +10,9 @@ import {
   Users,
   CheckCircle,
   Clock,
-  BarChart3
+  BarChart3,
+  Key,
+  X
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -73,6 +75,9 @@ const AdminPage: React.FC = () => {
   const [error, setError] = useState('');
   const [selectedAssessment, setSelectedAssessment] = useState<AssessmentDetail | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [resetPasswordModal, setResetPasswordModal] = useState<{open: boolean; orgId: number; orgName: string} | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
 
   const handleLogin = async () => {
     setLoading(true);
@@ -93,6 +98,37 @@ const AdminPage: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Errore di autenticazione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordModal || !newPassword) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/admin/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: resetPasswordModal.orgId,
+          new_password: newPassword,
+          admin_key: adminKey
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setResetSuccess(`Password resettata! Codice accesso: ${data.access_code}`);
+        setNewPassword('');
+        setTimeout(() => {
+          setResetPasswordModal(null);
+          setResetSuccess('');
+        }, 3000);
+      } else {
+        setError('Errore nel reset della password');
+      }
+    } catch (err) {
+      setError('Errore di connessione');
     } finally {
       setLoading(false);
     }
@@ -379,13 +415,20 @@ const AdminPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-2">
                       <p className="text-sm text-gray-500">
                         Registrato: {org.created_at ? new Date(org.created_at).toLocaleDateString('it-IT') : 'N/A'}
                       </p>
                       <p className="text-sm font-medium text-primary-600">
                         {org.assessments_count} assessment
                       </p>
+                      <button
+                        onClick={() => setResetPasswordModal({open: true, orgId: org.id, orgName: org.name})}
+                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1 rounded"
+                      >
+                        <Key className="w-3 h-3" />
+                        Reset Password
+                      </button>
                     </div>
                   </div>
 
@@ -441,6 +484,70 @@ const AdminPage: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Password Reset Modal */}
+      {resetPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Reset Password</h3>
+              <button
+                onClick={() => {
+                  setResetPasswordModal(null);
+                  setNewPassword('');
+                  setResetSuccess('');
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              Stai resettando la password per: <strong>{resetPasswordModal.orgName}</strong>
+            </p>
+
+            {resetSuccess ? (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                {resetSuccess}
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nuova Password
+                  </label>
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Inserisci nuova password"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setResetPasswordModal(null);
+                      setNewPassword('');
+                    }}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleResetPassword}
+                    disabled={loading || !newPassword}
+                    className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Resettando...' : 'Reset Password'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
