@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -7,9 +7,12 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { 
   RadarChart, 
   PolarGrid, 
@@ -47,6 +50,8 @@ const ReportPage: React.FC = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'report'>('overview');
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadReport();
@@ -117,6 +122,53 @@ ${reportData.report}
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadPdf = async () => {
+    if (!reportRef.current || !reportData) return;
+    
+    setGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#f9fafb'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      
+      let heightLeft = imgHeight * ratio;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+      heightLeft -= pdfHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight * ratio;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`report-maturity-${organization?.name || 'assessment'}-${id}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -177,11 +229,23 @@ ${reportData.report}
             </div>
             <div className="flex items-center gap-3">
               <button
+                onClick={handleDownloadPdf}
+                disabled={generatingPdf}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {generatingPdf ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FileText className="w-5 h-5" />
+                )}
+                <span className="hidden sm:inline">{generatingPdf ? 'Generando...' : 'Scarica PDF'}</span>
+              </button>
+              <button
                 onClick={handleDownloadReport}
                 className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               >
                 <Download className="w-5 h-5" />
-                <span className="hidden sm:inline">Scarica Report</span>
+                <span className="hidden sm:inline">Scarica MD</span>
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
@@ -195,7 +259,7 @@ ${reportData.report}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8" ref={reportRef}>
         {/* Dati Aziendali */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-800 mb-4">Dati Organizzazione</h2>
