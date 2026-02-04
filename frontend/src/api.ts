@@ -120,4 +120,18 @@ export const assessmentsApi = {
   },
 };
 
+export const assistantApi = {
+  chat: async (data: {
+    question_text: string;
+    question_hint: string;
+    options: string[];
+    user_message: string;
+    organization_type: string;
+    organization_sector: string;
+  }) => {
+    const response = await api.post<{ response: string }>('/assistant/chat', data);
+    return response.data;
+  },
+};
+
 export default api;

@@ -7,14 +7,18 @@ import {
   Loader2,
   Home,
   HelpCircle,
-  X
+  X,
+  MessageCircle,
+  Send
 } from 'lucide-react';
-import { questionsApi, assessmentsApi } from '../api';
+import { questionsApi, assessmentsApi, assistantApi } from '../api';
 import { Question, Answer } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 const AssessmentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { organization } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, Answer>>(new Map());
@@ -22,6 +26,10 @@ const AssessmentPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [_categories, setCategories] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatResponse, setChatResponse] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
     loadQuestions();
@@ -29,7 +37,31 @@ const AssessmentPage: React.FC = () => {
 
   useEffect(() => {
     setShowHint(false);
+    setShowChat(false);
+    setChatMessage('');
+    setChatResponse('');
   }, [currentIndex]);
+
+  const handleSendChat = async () => {
+    if (!chatMessage.trim() || !currentQuestion) return;
+    
+    setChatLoading(true);
+    try {
+      const response = await assistantApi.chat({
+        question_text: currentQuestion.text,
+        question_hint: currentQuestion.hint || '',
+        options: currentQuestion.options.map(o => o.text),
+        user_message: chatMessage,
+        organization_type: organization?.type || 'azienda',
+        organization_sector: organization?.sector || '',
+      });
+      setChatResponse(response.response);
+    } catch (error) {
+      setChatResponse('Errore nella comunicazione con l\'assistente. Riprova più tardi.');
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const loadQuestions = async () => {
     try {
@@ -163,17 +195,28 @@ const AssessmentPage: React.FC = () => {
                 <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
                   {currentQuestion.text}
                 </h2>
-                {currentQuestion.hint && (
+                <div className="flex gap-2 flex-shrink-0">
+                  {currentQuestion.hint && (
+                    <button
+                      onClick={() => setShowHint(!showHint)}
+                      className={`p-2 rounded-full transition-colors ${
+                        showHint ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-primary-500 hover:bg-gray-100'
+                      }`}
+                      title="Mostra suggerimento"
+                    >
+                      <HelpCircle className="w-6 h-6" />
+                    </button>
+                  )}
                   <button
-                    onClick={() => setShowHint(!showHint)}
-                    className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-                      showHint ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-primary-500 hover:bg-gray-100'
+                    onClick={() => setShowChat(!showChat)}
+                    className={`p-2 rounded-full transition-colors ${
+                      showChat ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-green-500 hover:bg-gray-100'
                     }`}
-                    title="Mostra suggerimento"
+                    title="Chiedi all'assistente AI"
                   >
-                    <HelpCircle className="w-6 h-6" />
+                    <MessageCircle className="w-6 h-6" />
                   </button>
-                )}
+                </div>
               </div>
 
               {showHint && currentQuestion.hint && (
@@ -187,6 +230,52 @@ const AssessmentPage: React.FC = () => {
                   <p className="text-sm text-blue-800 pr-6">
                     <strong>💡 Suggerimento:</strong> {currentQuestion.hint}
                   </p>
+                </div>
+              )}
+
+              {showChat && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-green-800 flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      Assistente AI
+                    </h3>
+                    <button
+                      onClick={() => setShowChat(false)}
+                      className="p-1 text-green-400 hover:text-green-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {chatResponse && (
+                    <div className="mb-4 p-3 bg-white rounded-lg border border-green-100">
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{chatResponse}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                      placeholder="Chiedi aiuto su questa domanda..."
+                      className="flex-1 px-4 py-2 border border-green-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      disabled={chatLoading}
+                    />
+                    <button
+                      onClick={handleSendChat}
+                      disabled={chatLoading || !chatMessage.trim()}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {chatLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 

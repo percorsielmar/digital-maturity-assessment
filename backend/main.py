@@ -6,7 +6,7 @@ from sqlalchemy import select, text
 from app.database import init_db, async_session, engine
 from app.models import Question
 from app.questions_data import DIGITAL_MATURITY_QUESTIONS
-from app.routers import auth, questions, assessments, admin
+from app.routers import auth, questions, assessments, admin, assistant
 
 async def run_migrations():
     async with engine.begin() as conn:
@@ -41,6 +41,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(questions.router, prefix="/api")
 app.include_router(assessments.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(assistant.router, prefix="/api")
 
 async def seed_questions():
     async with async_session() as session:
