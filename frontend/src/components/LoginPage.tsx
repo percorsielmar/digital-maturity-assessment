@@ -21,6 +21,9 @@ const LoginPage: React.FC = () => {
   const [sector, setSector] = useState('');
   const [size, setSize] = useState('');
   const [email, setEmail] = useState('');
+  const [fiscalCode, setFiscalCode] = useState('');
+  const [phone, setPhone] = useState('');
+  const [adminName, setAdminName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showAccessCode, setShowAccessCode] = useState(false);
@@ -96,6 +99,9 @@ const LoginPage: React.FC = () => {
         sector: sector || undefined,
         size: size || undefined,
         email: email || undefined,
+        fiscal_code: fiscalCode || undefined,
+        phone: phone || undefined,
+        admin_name: adminName || undefined,
         password,
       });
       setNewAccessCode(response.organization.access_code);
@@ -288,6 +294,42 @@ const LoginPage: React.FC = () => {
                 <option value="media">Media (50-249 dipendenti)</option>
                 <option value="grande">Grande (250+ dipendenti)</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                C.F. / P.IVA
+              </label>
+              <input
+                type="text"
+                value={fiscalCode}
+                onChange={(e) => setFiscalCode(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Codice Fiscale o Partita IVA"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Telefono
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="+39 xxx xxx xxxx"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nome e Cognome Responsabile
+              </label>
+              <input
+                type="text"
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Mario Rossi"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -8,6 +8,9 @@ class OrganizationCreate(BaseModel):
     sector: Optional[str] = None
     size: Optional[str] = None
     email: Optional[str] = None
+    fiscal_code: Optional[str] = None
+    phone: Optional[str] = None
+    admin_name: Optional[str] = None
     password: str
 
 class OrganizationResponse(BaseModel):
@@ -16,6 +19,10 @@ class OrganizationResponse(BaseModel):
     type: str
     sector: Optional[str]
     size: Optional[str]
+    email: Optional[str]
+    fiscal_code: Optional[str]
+    phone: Optional[str]
+    admin_name: Optional[str]
     access_code: str
     created_at: datetime
     

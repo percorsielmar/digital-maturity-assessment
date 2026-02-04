@@ -46,6 +46,9 @@ async def register_organization(
         sector=org_data.sector,
         size=org_data.size,
         email=org_data.email,
+        fiscal_code=org_data.fiscal_code,
+        phone=org_data.phone,
+        admin_name=org_data.admin_name,
         access_code=access_code,
         hashed_password=get_password_hash(org_data.password)
     )

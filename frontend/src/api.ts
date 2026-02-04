@@ -37,6 +37,9 @@ export const authApi = {
     sector?: string;
     size?: string;
     email?: string;
+    fiscal_code?: string;
+    phone?: string;
+    admin_name?: string;
     password: string;
   }) => {
     const response = await api.post<{

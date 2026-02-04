@@ -14,6 +14,9 @@ class Organization(Base):
     access_code = Column(String(100), unique=True, index=True)
     hashed_password = Column(String(255))
     email = Column(String(255))
+    fiscal_code = Column(String(50))  # Codice Fiscale / Partita IVA
+    phone = Column(String(50))  # Numero di telefono
+    admin_name = Column(String(255))  # Nome e Cognome responsabile
     created_at = Column(DateTime, default=datetime.utcnow)
     
     assessments = relationship("Assessment", back_populates="organization")

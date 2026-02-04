@@ -4,6 +4,10 @@ export interface Organization {
   type: string;
   sector: string | null;
   size: string | null;
+  email: string | null;
+  fiscal_code: string | null;
+  phone: string | null;
+  admin_name: string | null;
   access_code: string;
   created_at: string;
 }
