@@ -44,6 +44,7 @@ class Question(Base):
     category = Column(String(100), nullable=False)
     subcategory = Column(String(100))
     text = Column(Text, nullable=False)
+    hint = Column(Text)  # Tooltip/spiegazione per l'utente
     options = Column(JSON)  # List of options with scores
     weight = Column(Float, default=1.0)
     order = Column(Integer, default=0)

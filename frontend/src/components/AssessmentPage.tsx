@@ -5,7 +5,9 @@ import {
   ChevronRight, 
   Check, 
   Loader2,
-  Home
+  Home,
+  HelpCircle,
+  X
 } from 'lucide-react';
 import { questionsApi, assessmentsApi } from '../api';
 import { Question, Answer } from '../types';
@@ -19,10 +21,15 @@ const AssessmentPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [_categories, setCategories] = useState<string[]>([]);
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     loadQuestions();
   }, []);
+
+  useEffect(() => {
+    setShowHint(false);
+  }, [currentIndex]);
 
   const loadQuestions = async () => {
     try {
@@ -152,9 +159,36 @@ const AssessmentPage: React.FC = () => {
             </div>
 
             <div className="p-6 sm:p-8">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-8">
-                {currentQuestion.text}
-              </h2>
+              <div className="flex items-start justify-between gap-4 mb-8">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
+                  {currentQuestion.text}
+                </h2>
+                {currentQuestion.hint && (
+                  <button
+                    onClick={() => setShowHint(!showHint)}
+                    className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+                      showHint ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:text-primary-500 hover:bg-gray-100'
+                    }`}
+                    title="Mostra suggerimento"
+                  >
+                    <HelpCircle className="w-6 h-6" />
+                  </button>
+                )}
+              </div>
+
+              {showHint && currentQuestion.hint && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl relative">
+                  <button
+                    onClick={() => setShowHint(false)}
+                    className="absolute top-2 right-2 p-1 text-blue-400 hover:text-blue-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <p className="text-sm text-blue-800 pr-6">
+                    <strong>💡 Suggerimento:</strong> {currentQuestion.hint}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-3">
                 {currentQuestion.options.map((option, index) => (

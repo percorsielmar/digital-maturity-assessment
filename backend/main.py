@@ -13,6 +13,7 @@ async def run_migrations():
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS fiscal_code VARCHAR(50)"))
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE questions ADD COLUMN IF NOT EXISTS hint TEXT"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,6 +51,7 @@ async def seed_questions():
                     category=q_data["category"],
                     subcategory=q_data.get("subcategory"),
                     text=q_data["text"],
+                    hint=q_data.get("hint"),
                     options=q_data["options"],
                     weight=q_data.get("weight", 1.0),
                     order=q_data.get("order", 0),

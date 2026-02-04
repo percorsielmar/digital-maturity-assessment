@@ -22,6 +22,7 @@ export interface Question {
   category: string;
   subcategory: string | null;
   text: string;
+  hint: string | null;
   options: QuestionOption[];
   weight: number;
   order: number;

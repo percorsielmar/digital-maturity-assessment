@@ -47,6 +47,7 @@ class QuestionResponse(BaseModel):
     category: str
     subcategory: Optional[str]
     text: str
+    hint: Optional[str]
     options: List[QuestionOption]
     weight: float
     order: int
