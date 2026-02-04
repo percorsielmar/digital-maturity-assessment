@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Home, 
   Download, 
@@ -46,16 +46,27 @@ interface ReportData {
 const ReportPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { organization } = useAuth();
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'report'>('overview');
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [autoDownloadTriggered, setAutoDownloadTriggered] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadReport();
   }, [id]);
+
+  useEffect(() => {
+    if (searchParams.get('download') === 'pdf' && reportData && !loading && !autoDownloadTriggered) {
+      setAutoDownloadTriggered(true);
+      setTimeout(() => {
+        handleDownloadPdf();
+      }, 500);
+    }
+  }, [searchParams, reportData, loading, autoDownloadTriggered]);
 
   const loadReport = async () => {
     if (!id) return;

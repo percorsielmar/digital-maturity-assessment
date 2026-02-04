@@ -8,7 +8,8 @@ import {
   FileText,
   Building2,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { assessmentsApi } from '../api';
@@ -199,15 +200,28 @@ const Dashboard: React.FC = () => {
                     )}
                     {getStatusBadge(assessment.status)}
                     {assessment.status === 'completed' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/report/${assessment.id}`);
-                        }}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      >
-                        <FileText className="w-5 h-5" />
-                      </button>
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/report/${assessment.id}`);
+                          }}
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="Visualizza Report"
+                        >
+                          <FileText className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/report/${assessment.id}?download=pdf`);
+                          }}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Scarica PDF"
+                        >
+                          <Download className="w-5 h-5" />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
