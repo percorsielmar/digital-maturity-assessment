@@ -84,7 +84,29 @@ const ReportPage: React.FC = () => {
   const handleDownloadReport = () => {
     if (!reportData) return;
     
-    const blob = new Blob([reportData.report], { type: 'text/markdown' });
+    const orgDetails = `# Report Valutazione Maturità Digitale
+
+## Dati Organizzazione
+- **Ragione Sociale:** ${organization?.name || '-'}
+- **Tipologia:** ${organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Azienda Privata'}
+- **Settore:** ${organization?.sector || '-'}
+- **Dimensione:** ${organization?.size || '-'}
+- **C.F. / P.IVA:** ${organization?.fiscal_code || '-'}
+- **Telefono:** ${organization?.phone || '-'}
+- **Email:** ${organization?.email || '-'}
+- **Referente Compilazione:** ${organization?.admin_name || '-'}
+- **Data Assessment:** ${new Date().toLocaleDateString('it-IT')}
+
+---
+
+## Livello di Maturità Digitale: ${reportData.maturity_level.toFixed(1)} / 5
+
+---
+
+${reportData.report}
+`;
+    
+    const blob = new Blob([orgDetails], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -174,6 +196,49 @@ const ReportPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Dati Aziendali */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Dati Organizzazione</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Ragione Sociale</p>
+              <p className="font-semibold text-gray-800">{organization?.name || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Tipologia</p>
+              <p className="font-semibold text-gray-800">{organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Azienda Privata'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Settore</p>
+              <p className="font-semibold text-gray-800">{organization?.sector || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Dimensione</p>
+              <p className="font-semibold text-gray-800">{organization?.size || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">C.F. / P.IVA</p>
+              <p className="font-semibold text-gray-800">{organization?.fiscal_code || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Telefono</p>
+              <p className="font-semibold text-gray-800">{organization?.phone || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-semibold text-gray-800">{organization?.email || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Referente Compilazione</p>
+              <p className="font-semibold text-gray-800">{organization?.admin_name || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Data Assessment</p>
+              <p className="font-semibold text-gray-800">{new Date().toLocaleDateString('it-IT')}</p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-8 mb-8 text-white">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
