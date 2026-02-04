@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlalchemy import select
+from sqlalchemy import select, text
 
-from app.database import init_db, async_session
+from app.database import init_db, async_session, engine
 from app.models import Question
 from app.questions_data import DIGITAL_MATURITY_QUESTIONS
 from app.routers import auth, questions, assessments, admin
 
+async def run_migrations():
+    async with engine.begin() as conn:
+        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS fiscal_code VARCHAR(50)"))
+        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
+        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    await run_migrations()
     await seed_questions()
     yield
 
