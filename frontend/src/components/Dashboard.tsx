@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { assessmentsApi, organizationApi, questionsLevel2Api } from '../api';
+import { assessmentsApi, organizationApi } from '../api';
 import { Assessment } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -32,24 +32,10 @@ const Dashboard: React.FC = () => {
     size: organization?.size || ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
-  const [level2Eligible, setLevel2Eligible] = useState(false);
 
   useEffect(() => {
     loadAssessments();
-    checkLevel2Eligibility();
   }, []);
-
-  const checkLevel2Eligibility = async () => {
-    try {
-      const result = await questionsLevel2Api.checkEligibility();
-      console.log('Level 2 eligibility:', result);
-      setLevel2Eligible(result.eligible);
-    } catch (error) {
-      console.error('Error checking level 2 eligibility:', error);
-      // Show button anyway if there's an error (for debugging)
-      setLevel2Eligible(true);
-    }
-  };
 
   const loadAssessments = async () => {
     try {

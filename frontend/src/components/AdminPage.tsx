@@ -205,11 +205,10 @@ const AdminPage: React.FC = () => {
     setGeneratingPdf(true);
     try {
       const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#f9fafb'
-      });
+      } as any);
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({

@@ -6,8 +6,7 @@ import {
   Check, 
   Loader2,
   Home,
-  HelpCircle,
-  X
+  HelpCircle
 } from 'lucide-react';
 import { questionsLevel2Api, assessmentsApi } from '../api';
 import { Level2Question } from '../types';
@@ -26,7 +25,6 @@ const AssessmentLevel2Page: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
   const answersRef = useRef<Map<number, Level2Answer>>(new Map());
 
   useEffect(() => {
@@ -45,7 +43,6 @@ const AssessmentLevel2Page: React.FC = () => {
     try {
       const data = await questionsLevel2Api.getQuestions();
       setQuestions(data.questions);
-      setCategories(data.categories);
       
       // Load saved progress
       if (id) {
@@ -56,7 +53,7 @@ const AssessmentLevel2Page: React.FC = () => {
             for (const ans of assessment.responses.answers) {
               savedAnswers.set(ans.question_id, {
                 question_id: ans.question_id,
-                value: ans.value || ans.selected_option?.toString() || ''
+                value: (ans as any).value || ans.selected_option?.toString() || ''
               });
             }
             setAnswers(savedAnswers);
