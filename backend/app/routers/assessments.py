@@ -14,11 +14,30 @@ router = APIRouter(prefix="/assessments", tags=["assessments"])
 
 @router.post("/", response_model=AssessmentResponse)
 async def create_assessment(
+    level: int = 1,
     organization: Organization = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db)
 ):
+    # For level 2, check if at least one level 1 is completed
+    if level == 2:
+        result = await db.execute(
+            select(Assessment)
+            .where(
+                Assessment.organization_id == organization.id,
+                Assessment.level == 1,
+                Assessment.status == "completed"
+            )
+        )
+        completed_level1 = result.scalar_one_or_none()
+        if not completed_level1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="È necessario completare almeno un assessment di livello 1 prima di accedere al livello 2"
+            )
+    
     assessment = Assessment(
         organization_id=organization.id,
+        level=level,
         status="in_progress",
         responses={},
         scores={},

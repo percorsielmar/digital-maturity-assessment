@@ -26,6 +26,7 @@ class Assessment(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     organization_id = Column(Integer, ForeignKey("organizations.id"))
+    level = Column(Integer, default=1)  # 1 = base, 2 = advanced
     status = Column(String(50), default="in_progress")  # in_progress, completed, analyzed
     responses = Column(JSON, default=dict)
     scores = Column(JSON, default=dict)

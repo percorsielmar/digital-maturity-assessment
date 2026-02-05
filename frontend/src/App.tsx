@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import AssessmentPage from './components/AssessmentPage';
+import AssessmentLevel2Page from './components/AssessmentLevel2Page';
 import ReportPage from './components/ReportPage';
 import AdminPage from './components/AdminPage';
 
@@ -45,6 +46,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessment-level2/:id"
+            element={
+              <ProtectedRoute>
+                <AssessmentLevel2Page />
               </ProtectedRoute>
             }
           />

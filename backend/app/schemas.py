@@ -66,6 +66,7 @@ class AssessmentSubmit(BaseModel):
 class AssessmentResponse(BaseModel):
     id: int
     organization_id: int
+    level: int = 1
     status: str
     scores: Optional[Dict[str, Any]]
     maturity_level: Optional[float]
@@ -80,6 +81,7 @@ class AssessmentResponse(BaseModel):
 
 class AssessmentSummary(BaseModel):
     id: int
+    level: int = 1
     status: str
     maturity_level: Optional[float]
     created_at: datetime

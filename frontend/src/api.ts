@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Organization, Question, Assessment, Answer } from './types';
+import { Organization, Question, Assessment, Answer, Level2Question } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -87,8 +87,8 @@ export const questionsApi = {
 };
 
 export const assessmentsApi = {
-  create: async () => {
-    const response = await api.post<Assessment>('/assessments/');
+  create: async (level: number = 1) => {
+    const response = await api.post<Assessment>(`/assessments/?level=${level}`);
     return response.data;
   },
 
@@ -145,6 +145,26 @@ export const organizationApi = {
     size?: string;
   }) => {
     const response = await api.put<Organization>('/auth/organization', data);
+    return response.data;
+  },
+};
+
+export const questionsLevel2Api = {
+  getQuestions: async () => {
+    const response = await api.get<{
+      questions: Level2Question[];
+      categories: string[];
+      total: number;
+    }>('/questions-level2/');
+    return response.data;
+  },
+  
+  checkEligibility: async () => {
+    const response = await api.get<{
+      eligible: boolean;
+      completed_level1_count: number;
+      message: string;
+    }>('/questions-level2/check-eligibility');
     return response.data;
   },
 };

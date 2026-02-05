@@ -37,6 +37,7 @@ export interface Answer {
 export interface Assessment {
   id: number;
   organization_id: number;
+  level: number;
   status: string;
   scores: Record<string, number>;
   maturity_level: number | null;
@@ -51,6 +52,19 @@ export interface Assessment {
   };
   created_at: string;
   completed_at: string | null;
+}
+
+export interface Level2Question {
+  id: number;
+  category: string;
+  subcategory: string;
+  code: string;
+  text: string;
+  type: 'text' | 'select' | 'multiselect';
+  required: boolean;
+  options: Array<{ value: string; text: string; score?: number }> | null;
+  hint: string;
+  conditional?: { question_id: number; value: string };
 }
 
 export interface GapAnalysisItem {

@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { assessmentsApi, organizationApi } from '../api';
+import { assessmentsApi, organizationApi, questionsLevel2Api } from '../api';
 import { Assessment } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -32,10 +32,21 @@ const Dashboard: React.FC = () => {
     size: organization?.size || ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [level2Eligible, setLevel2Eligible] = useState(false);
 
   useEffect(() => {
     loadAssessments();
+    checkLevel2Eligibility();
   }, []);
+
+  const checkLevel2Eligibility = async () => {
+    try {
+      const result = await questionsLevel2Api.checkEligibility();
+      setLevel2Eligible(result.eligible);
+    } catch (error) {
+      console.error('Error checking level 2 eligibility:', error);
+    }
+  };
 
   const loadAssessments = async () => {
     try {
@@ -48,10 +59,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleNewAssessment = async () => {
+  const handleNewAssessment = async (level: number = 1) => {
     try {
-      const assessment = await assessmentsApi.create();
-      navigate(`/assessment/${assessment.id}`);
+      const assessment = await assessmentsApi.create(level);
+      if (level === 2) {
+        navigate(`/assessment-level2/${assessment.id}`);
+      } else {
+        navigate(`/assessment/${assessment.id}`);
+      }
     } catch (error) {
       console.error('Error creating assessment:', error);
     }
@@ -279,13 +294,24 @@ const Dashboard: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800">I tuoi Assessment</h2>
             <p className="text-gray-500 mt-1">Gestisci le valutazioni di maturità digitale</p>
           </div>
-          <button
-            onClick={handleNewAssessment}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200"
-          >
-            <Plus className="w-5 h-5" />
-            Nuovo Assessment
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleNewAssessment(1)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200"
+            >
+              <Plus className="w-5 h-5" />
+              Assessment Livello 1
+            </button>
+            {level2Eligible && (
+              <button
+                onClick={() => handleNewAssessment(2)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+              >
+                <Plus className="w-5 h-5" />
+                Assessment Livello 2
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -300,7 +326,7 @@ const Dashboard: React.FC = () => {
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Nessun assessment</h3>
             <p className="text-gray-500 mb-6">Inizia la tua prima valutazione di maturità digitale</p>
             <button
-              onClick={handleNewAssessment}
+              onClick={() => handleNewAssessment(1)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
@@ -316,6 +342,8 @@ const Dashboard: React.FC = () => {
                 onClick={() => {
                   if (assessment.status === 'completed') {
                     navigate(`/report/${assessment.id}`);
+                  } else if (assessment.level === 2) {
+                    navigate(`/assessment-level2/${assessment.id}`);
                   } else {
                     navigate(`/assessment/${assessment.id}`);
                   }
@@ -323,16 +351,19 @@ const Dashboard: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${assessment.level === 2 ? 'bg-green-100' : 'bg-gray-100'}`}>
                       {assessment.status === 'completed' ? (
-                        <BarChart3 className="w-6 h-6 text-primary-600" />
+                        <BarChart3 className={`w-6 h-6 ${assessment.level === 2 ? 'text-green-600' : 'text-primary-600'}`} />
                       ) : (
-                        <ClipboardList className="w-6 h-6 text-gray-400" />
+                        <ClipboardList className={`w-6 h-6 ${assessment.level === 2 ? 'text-green-400' : 'text-gray-400'}`} />
                       )}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-800">
                         Assessment #{assessment.id}
+                        <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${assessment.level === 2 ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>
+                          Livello {assessment.level || 1}
+                        </span>
                       </h3>
                       <p className="text-sm text-gray-500">
                         Creato il {formatDate(assessment.created_at)}

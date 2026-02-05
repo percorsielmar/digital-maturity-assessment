@@ -6,7 +6,7 @@ from sqlalchemy import select, text
 from app.database import init_db, async_session, engine
 from app.models import Question
 from app.questions_data import DIGITAL_MATURITY_QUESTIONS
-from app.routers import auth, questions, assessments, admin, assistant
+from app.routers import auth, questions, assessments, admin, assistant, questions_level2
 
 async def run_migrations():
     async with engine.begin() as conn:
@@ -14,6 +14,7 @@ async def run_migrations():
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
         await conn.execute(text("ALTER TABLE questions ADD COLUMN IF NOT EXISTS hint TEXT"))
+        await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +43,7 @@ app.include_router(questions.router, prefix="/api")
 app.include_router(assessments.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(assistant.router, prefix="/api")
+app.include_router(questions_level2.router, prefix="/api")
 
 async def seed_questions():
     async with async_session() as session:
