@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from typing import List
 from datetime import datetime
 
@@ -18,13 +18,13 @@ async def create_assessment(
     organization: Organization = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db)
 ):
-    # For level 2, check if at least one level 1 is completed
+    # For level 2, check if at least one level 1 is completed (level=1 or level=NULL)
     if level == 2:
         result = await db.execute(
             select(Assessment)
             .where(
                 Assessment.organization_id == organization.id,
-                Assessment.level == 1,
+                or_(Assessment.level == 1, Assessment.level == None),
                 Assessment.status == "completed"
             )
         )
