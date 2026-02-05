@@ -71,6 +71,7 @@ class AssessmentResponse(BaseModel):
     maturity_level: Optional[float]
     gap_analysis: Optional[Dict[str, Any]]
     report: Optional[str]
+    responses: Optional[Dict[str, Any]]
     created_at: datetime
     completed_at: Optional[datetime]
     
