@@ -102,10 +102,12 @@ export const assessmentsApi = {
     return response.data;
   },
 
-  submit: async (id: number, answers: Answer[]) => {
-    const response = await api.post<Assessment>(`/assessments/${id}/submit`, {
-      answers,
-    });
+  submit: async (assessmentId: number, answers: Answer[]) => {
+    const response = await api.post<Assessment>(`/assessments/${assessmentId}/submit`, { answers });
+    return response.data;
+  },
+  saveProgress: async (assessmentId: number, answers: Answer[]) => {
+    const response = await api.put(`/assessments/${assessmentId}/save-progress`, { answers });
     return response.data;
   },
 

@@ -65,6 +65,50 @@ async def get_assessment(
     
     return AssessmentResponse.model_validate(assessment)
 
+@router.put("/{assessment_id}/save-progress")
+async def save_progress(
+    assessment_id: int,
+    submission: AssessmentSubmit,
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(Assessment)
+        .where(
+            Assessment.id == assessment_id,
+            Assessment.organization_id == organization.id
+        )
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    if assessment.status == "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Assessment già completato"
+        )
+    
+    responses = {
+        "answers": [
+            {
+                "question_id": a.question_id,
+                "selected_option": a.selected_option,
+                "notes": a.notes
+            }
+            for a in submission.answers
+        ]
+    }
+    
+    assessment.responses = responses
+    await db.commit()
+    
+    return {"success": True, "saved_answers": len(submission.answers)}
+
 @router.post("/{assessment_id}/submit", response_model=AssessmentResponse)
 async def submit_assessment(
     assessment_id: int,

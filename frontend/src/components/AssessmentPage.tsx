@@ -77,6 +77,33 @@ const AssessmentPage: React.FC = () => {
       setQuestions(data);
       const uniqueCategories = [...new Set(data.map(q => q.category))];
       setCategories(uniqueCategories);
+      
+      // Load saved progress if exists
+      if (id) {
+        try {
+          const assessment = await assessmentsApi.getById(parseInt(id));
+          if (assessment.responses?.answers && assessment.status === 'in_progress') {
+            const savedAnswers = new Map<number, Answer>();
+            for (const ans of assessment.responses.answers) {
+              savedAnswers.set(ans.question_id, {
+                question_id: ans.question_id,
+                selected_option: ans.selected_option,
+                notes: ans.notes || ''
+              });
+            }
+            setAnswers(savedAnswers);
+            // Go to first unanswered question
+            const firstUnanswered = data.findIndex(q => !savedAnswers.has(q.id));
+            if (firstUnanswered > 0) {
+              setCurrentIndex(firstUnanswered);
+            } else if (savedAnswers.size === data.length) {
+              setCurrentIndex(data.length - 1);
+            }
+          }
+        } catch (e) {
+          console.log('No saved progress found');
+        }
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
     } finally {
@@ -87,13 +114,23 @@ const AssessmentPage: React.FC = () => {
   const currentQuestion = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
 
-  const handleSelectOption = (optionIndex: number) => {
+  const handleSelectOption = async (optionIndex: number) => {
     const newAnswers = new Map(answers);
     newAnswers.set(currentQuestion.id, {
       question_id: currentQuestion.id,
       selected_option: optionIndex
     });
     setAnswers(newAnswers);
+    
+    // Auto-save progress
+    if (id) {
+      try {
+        const answersArray = Array.from(newAnswers.values());
+        await assessmentsApi.saveProgress(parseInt(id), answersArray);
+      } catch (error) {
+        console.error('Error auto-saving:', error);
+      }
+    }
   };
 
   const handleNext = () => {

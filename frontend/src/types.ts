@@ -42,6 +42,13 @@ export interface Assessment {
   maturity_level: number | null;
   gap_analysis: Record<string, GapAnalysisItem>;
   report: string | null;
+  responses?: {
+    answers: Array<{
+      question_id: number;
+      selected_option: number;
+      notes?: string;
+    }>;
+  };
   created_at: string;
   completed_at: string | null;
 }
