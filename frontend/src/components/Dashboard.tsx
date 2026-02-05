@@ -50,14 +50,17 @@ const Dashboard: React.FC = () => {
 
   const handleNewAssessment = async (level: number = 1) => {
     try {
+      console.log('Creating assessment level:', level);
       const assessment = await assessmentsApi.create(level);
+      console.log('Created assessment:', assessment);
       if (level === 2) {
         navigate(`/assessment-level2/${assessment.id}`);
       } else {
         navigate(`/assessment/${assessment.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating assessment:', error);
+      alert(`Errore: ${error?.response?.data?.detail || error.message || 'Errore sconosciuto'}`);
     }
   };
 
