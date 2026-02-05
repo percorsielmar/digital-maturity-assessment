@@ -4,6 +4,7 @@ import { Organization, AuthState } from '../types';
 interface AuthContextType extends AuthState {
   login: (token: string, organization: Organization) => void;
   logout: () => void;
+  updateOrganization: (organization: Organization) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,8 +55,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const updateOrganization = (organization: Organization) => {
+    localStorage.setItem('organization', JSON.stringify(organization));
+    setAuthState(prev => ({
+      ...prev,
+      organization,
+    }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
+    <AuthContext.Provider value={{ ...authState, login, logout, updateOrganization }}>
       {children}
     </AuthContext.Provider>
   );

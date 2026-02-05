@@ -11,14 +11,14 @@ import {
   MessageCircle,
   Send
 } from 'lucide-react';
-import { questionsApi, assessmentsApi, assistantApi } from '../api';
+import { questionsApi, assessmentsApi, assistantApi, organizationApi } from '../api';
 import { Question, Answer } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 const AssessmentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { organization } = useAuth();
+  const { organization, updateOrganization } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, Answer>>(new Map());
@@ -30,6 +30,14 @@ const AssessmentPage: React.FC = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatResponse, setChatResponse] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [showMissingDataModal, setShowMissingDataModal] = useState(false);
+  const [missingData, setMissingData] = useState({
+    fiscal_code: '',
+    phone: '',
+    admin_name: '',
+    sector: '',
+    size: ''
+  });
 
   useEffect(() => {
     loadQuestions();
@@ -100,7 +108,31 @@ const AssessmentPage: React.FC = () => {
     }
   };
 
+  const checkMissingData = () => {
+    if (!organization) return false;
+    return !organization.fiscal_code || !organization.phone || !organization.admin_name || 
+           !organization.sector || !organization.size;
+  };
+
   const handleSubmit = async () => {
+    if (!id) return;
+    
+    if (checkMissingData()) {
+      setMissingData({
+        fiscal_code: organization?.fiscal_code || '',
+        phone: organization?.phone || '',
+        admin_name: organization?.admin_name || '',
+        sector: organization?.sector || '',
+        size: organization?.size || ''
+      });
+      setShowMissingDataModal(true);
+      return;
+    }
+    
+    await submitAssessment();
+  };
+
+  const submitAssessment = async () => {
     if (!id) return;
     
     setSubmitting(true);
@@ -111,6 +143,21 @@ const AssessmentPage: React.FC = () => {
     } catch (error) {
       console.error('Error submitting assessment:', error);
       alert('Errore durante l\'invio. Riprova.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSaveMissingData = async () => {
+    setSubmitting(true);
+    try {
+      const updatedOrg = await organizationApi.update(missingData);
+      updateOrganization(updatedOrg);
+      setShowMissingDataModal(false);
+      await submitAssessment();
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      alert('Errore nel salvataggio dei dati. Riprova.');
     } finally {
       setSubmitting(false);
     }
@@ -365,6 +412,136 @@ const AssessmentPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {showMissingDataModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-800">Completa i tuoi dati</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Prima di completare l'assessment, inserisci i dati mancanti per generare un report completo.
+              </p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {!organization?.admin_name && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome Responsabile *
+                  </label>
+                  <input
+                    type="text"
+                    value={missingData.admin_name}
+                    onChange={(e) => setMissingData({...missingData, admin_name: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Nome e cognome del responsabile"
+                  />
+                </div>
+              )}
+              
+              {!organization?.fiscal_code && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Codice Fiscale / P.IVA *
+                  </label>
+                  <input
+                    type="text"
+                    value={missingData.fiscal_code}
+                    onChange={(e) => setMissingData({...missingData, fiscal_code: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Codice fiscale o partita IVA"
+                  />
+                </div>
+              )}
+              
+              {!organization?.phone && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Telefono *
+                  </label>
+                  <input
+                    type="tel"
+                    value={missingData.phone}
+                    onChange={(e) => setMissingData({...missingData, phone: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="+39 xxx xxx xxxx"
+                  />
+                </div>
+              )}
+              
+              {!organization?.sector && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Settore *
+                  </label>
+                  <select
+                    value={missingData.sector}
+                    onChange={(e) => setMissingData({...missingData, sector: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">Seleziona settore</option>
+                    <option value="manifatturiero">Manifatturiero</option>
+                    <option value="servizi">Servizi</option>
+                    <option value="commercio">Commercio</option>
+                    <option value="tecnologia">Tecnologia</option>
+                    <option value="sanita">Sanità</option>
+                    <option value="istruzione">Istruzione</option>
+                    <option value="finanza">Finanza</option>
+                    <option value="pubblica_amministrazione">Pubblica Amministrazione</option>
+                    <option value="altro">Altro</option>
+                  </select>
+                </div>
+              )}
+              
+              {!organization?.size && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dimensione Organizzazione *
+                  </label>
+                  <select
+                    value={missingData.size}
+                    onChange={(e) => setMissingData({...missingData, size: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">Seleziona dimensione</option>
+                    <option value="1-10">1-10 dipendenti</option>
+                    <option value="11-50">11-50 dipendenti</option>
+                    <option value="51-250">51-250 dipendenti</option>
+                    <option value="251-1000">251-1000 dipendenti</option>
+                    <option value="1000+">Oltre 1000 dipendenti</option>
+                  </select>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowMissingDataModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSaveMissingData}
+                disabled={submitting}
+                className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Salvataggio...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Salva e Completa
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

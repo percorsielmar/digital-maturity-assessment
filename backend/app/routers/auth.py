@@ -171,3 +171,31 @@ async def google_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token Google non valido: {str(e)}"
         )
+
+class OrganizationUpdate(BaseModel):
+    fiscal_code: str | None = None
+    phone: str | None = None
+    admin_name: str | None = None
+    sector: str | None = None
+    size: str | None = None
+
+@router.put("/organization", response_model=OrganizationResponse)
+async def update_organization(
+    update_data: OrganizationUpdate,
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    if update_data.fiscal_code is not None:
+        organization.fiscal_code = update_data.fiscal_code
+    if update_data.phone is not None:
+        organization.phone = update_data.phone
+    if update_data.admin_name is not None:
+        organization.admin_name = update_data.admin_name
+    if update_data.sector is not None:
+        organization.sector = update_data.sector
+    if update_data.size is not None:
+        organization.size = update_data.size
+    
+    await db.commit()
+    await db.refresh(organization)
+    return OrganizationResponse.model_validate(organization)

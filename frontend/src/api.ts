@@ -134,4 +134,17 @@ export const assistantApi = {
   },
 };
 
+export const organizationApi = {
+  update: async (data: {
+    fiscal_code?: string;
+    phone?: string;
+    admin_name?: string;
+    sector?: string;
+    size?: string;
+  }) => {
+    const response = await api.put<Organization>('/auth/organization', data);
+    return response.data;
+  },
+};
+
 export default api;
