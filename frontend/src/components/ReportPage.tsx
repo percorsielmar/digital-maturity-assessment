@@ -144,7 +144,6 @@ ${reportData.report}
         backgroundColor: '#f9fafb'
       } as any);
       
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -155,20 +154,38 @@ ${reportData.report}
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      let heightLeft = imgHeight * ratio;
-      let position = 0;
+      // Scale image to fit page width with margins
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const ratio = availableWidth / imgWidth;
+      const scaledHeight = imgHeight * ratio;
       
-      pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-      heightLeft -= pdfHeight;
+      let heightLeft = scaledHeight;
+      let page = 0;
       
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight * ratio;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-        heightLeft -= pdfHeight;
+        if (page > 0) {
+          pdf.addPage();
+        }
+        
+        // Calculate how much of the image to show on this page
+        const sourceY = page * (pdfHeight - margin * 2) / ratio;
+        const sourceHeight = Math.min((pdfHeight - margin * 2) / ratio, imgHeight - sourceY);
+        
+        // Create a temporary canvas for this page section
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgWidth;
+        pageCanvas.height = sourceHeight;
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
+          const pageImgData = pageCanvas.toDataURL('image/png');
+          pdf.addImage(pageImgData, 'PNG', margin, margin, availableWidth, sourceHeight * ratio);
+        }
+        
+        heightLeft -= (pdfHeight - margin * 2);
+        page++;
       }
       
       pdf.save(`report-maturity-${organization?.name || 'assessment'}-${id}.pdf`);

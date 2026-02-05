@@ -210,7 +210,6 @@ const AdminPage: React.FC = () => {
         backgroundColor: '#f9fafb'
       } as any);
       
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -221,20 +220,38 @@ const AdminPage: React.FC = () => {
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      let heightLeft = imgHeight * ratio;
-      let position = 0;
+      // Scale image to fit page width with margins
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const ratio = availableWidth / imgWidth;
+      const scaledHeight = imgHeight * ratio;
       
-      pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-      heightLeft -= pdfHeight;
+      let heightLeft = scaledHeight;
+      let page = 0;
       
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight * ratio;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-        heightLeft -= pdfHeight;
+        if (page > 0) {
+          pdf.addPage();
+        }
+        
+        // Calculate how much of the image to show on this page
+        const sourceY = page * (pdfHeight - margin * 2) / ratio;
+        const sourceHeight = Math.min((pdfHeight - margin * 2) / ratio, imgHeight - sourceY);
+        
+        // Create a temporary canvas for this page section
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgWidth;
+        pageCanvas.height = sourceHeight;
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
+          const pageImgData = pageCanvas.toDataURL('image/png');
+          pdf.addImage(pageImgData, 'PNG', margin, margin, availableWidth, sourceHeight * ratio);
+        }
+        
+        heightLeft -= (pdfHeight - margin * 2);
+        page++;
       }
       
       pdf.save(`report-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.pdf`);
@@ -345,14 +362,46 @@ const AdminPage: React.FC = () => {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8" ref={reportRef}>
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <p className="text-sm text-gray-500 mb-1">Organizzazione</p>
-              <p className="text-xl font-bold text-gray-800">{selectedAssessment.organization?.name}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedAssessment.organization?.type} - {selectedAssessment.organization?.sector}
-              </p>
+          {/* Dati Organizzazione */}
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Dati Organizzazione</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Ragione Sociale</p>
+                <p className="font-semibold text-gray-800">{selectedAssessment.organization?.name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Tipologia</p>
+                <p className="font-semibold text-gray-800">{selectedAssessment.organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Azienda Privata'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Settore</p>
+                <p className="font-semibold text-gray-800">{selectedAssessment.organization?.sector || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Dimensione</p>
+                <p className="font-semibold text-gray-800">{(selectedAssessment.organization as any)?.size || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">C.F. / P.IVA</p>
+                <p className="font-semibold text-gray-800">{(selectedAssessment.organization as any)?.fiscal_code || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Telefono</p>
+                <p className="font-semibold text-gray-800">{(selectedAssessment.organization as any)?.phone || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="font-semibold text-gray-800">{(selectedAssessment.organization as any)?.email || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Referente</p>
+                <p className="font-semibold text-gray-800">{(selectedAssessment.organization as any)?.admin_name || '-'}</p>
+              </div>
             </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <p className="text-sm text-gray-500 mb-1">Livello Maturità</p>
               <p className="text-4xl font-bold text-primary-600">
@@ -361,10 +410,14 @@ const AdminPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-6">
+              <p className="text-sm text-gray-500 mb-1">Assessment</p>
+              <p className="text-xl font-bold text-gray-800">#{selectedAssessment.id}</p>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-6">
               <p className="text-sm text-gray-500 mb-1">Data Completamento</p>
               <p className="text-xl font-bold text-gray-800">
                 {selectedAssessment.completed_at 
-                  ? new Date(selectedAssessment.completed_at).toLocaleDateString('it-IT')
+                  ? new Date(selectedAssessment.completed_at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
                   : 'Non completato'}
               </p>
             </div>
