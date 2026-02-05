@@ -88,7 +88,7 @@ export const questionsApi = {
 
 export const assessmentsApi = {
   create: async (level: number = 1) => {
-    const response = await api.post<Assessment>(`/assessments/?level=${level}`);
+    const response = await api.post<Assessment>('/assessments/', { level });
     return response.data;
   },
 

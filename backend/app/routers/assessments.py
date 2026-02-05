@@ -12,12 +12,20 @@ from app.crew_agents import run_crew_analysis
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
+from pydantic import BaseModel
+from typing import Optional
+
+class CreateAssessmentRequest(BaseModel):
+    level: Optional[int] = 1
+
 @router.post("/", response_model=AssessmentResponse)
 async def create_assessment(
-    level: int = 1,
+    request: CreateAssessmentRequest = CreateAssessmentRequest(),
     organization: Organization = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db)
 ):
+    level = request.level or 1
+    
     # For level 2, check if at least one level 1 is completed (level=1 or level=NULL)
     if level == 2:
         result = await db.execute(
