@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from typing import List
 
 from app.database import get_db
@@ -16,12 +16,12 @@ async def get_level2_questions(
     db: AsyncSession = Depends(get_db)
 ):
     """Get all level 2 questions. Requires at least one completed level 1 assessment."""
-    # Check if organization has completed at least one level 1 assessment
+    # Check if organization has completed at least one level 1 assessment (level=1 or level=NULL)
     result = await db.execute(
         select(Assessment)
         .where(
             Assessment.organization_id == organization.id,
-            Assessment.level == 1,
+            or_(Assessment.level == 1, Assessment.level == None),
             Assessment.status == "completed"
         )
     )
@@ -45,11 +45,12 @@ async def check_level2_eligibility(
     db: AsyncSession = Depends(get_db)
 ):
     """Check if organization can access level 2 assessment."""
+    # Consider level=1 or level=NULL as level 1 assessments
     result = await db.execute(
         select(Assessment)
         .where(
             Assessment.organization_id == organization.id,
-            Assessment.level == 1,
+            or_(Assessment.level == 1, Assessment.level == None),
             Assessment.status == "completed"
         )
     )
