@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -38,6 +38,40 @@ const AssessmentPage: React.FC = () => {
     sector: '',
     size: ''
   });
+  const answersRef = useRef<Map<number, Answer>>(new Map());
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  // Save on page unload (tablet/mobile friendly)
+  useEffect(() => {
+    const saveBeforeUnload = () => {
+      if (id && answersRef.current.size > 0) {
+        const answersArray = Array.from(answersRef.current.values());
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        // sendBeacon doesn't support auth headers, so we save via localStorage as backup
+        localStorage.setItem(`assessment_${id}_backup`, JSON.stringify(answersArray));
+        navigator.sendBeacon(
+          `${apiUrl}/assessments/${id}/save-progress`,
+          new Blob([JSON.stringify({ answers: answersArray })], { type: 'application/json' })
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', saveBeforeUnload);
+    window.addEventListener('pagehide', saveBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', saveBeforeUnload);
+      window.removeEventListener('pagehide', saveBeforeUnload);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [id]);
 
   useEffect(() => {
     loadQuestions();
@@ -84,8 +118,11 @@ const AssessmentPage: React.FC = () => {
           const assessment = await assessmentsApi.getById(parseInt(id));
           console.log('Loaded assessment:', assessment);
           console.log('Responses:', assessment.responses);
+          
+          let savedAnswers = new Map<number, Answer>();
+          
+          // Try to load from server first
           if (assessment.responses && assessment.responses.answers && assessment.responses.answers.length > 0 && assessment.status === 'in_progress') {
-            const savedAnswers = new Map<number, Answer>();
             for (const ans of assessment.responses.answers) {
               savedAnswers.set(ans.question_id, {
                 question_id: ans.question_id,
@@ -93,7 +130,31 @@ const AssessmentPage: React.FC = () => {
                 notes: ans.notes || ''
               });
             }
-            console.log('Restored answers:', savedAnswers.size);
+            console.log('Restored from server:', savedAnswers.size);
+          }
+          
+          // Check localStorage backup (for tablet/mobile)
+          const backupKey = `assessment_${id}_backup`;
+          const backup = localStorage.getItem(backupKey);
+          if (backup && assessment.status === 'in_progress') {
+            try {
+              const backupAnswers = JSON.parse(backup) as Answer[];
+              if (backupAnswers.length > savedAnswers.size) {
+                console.log('Using localStorage backup:', backupAnswers.length);
+                savedAnswers = new Map<number, Answer>();
+                for (const ans of backupAnswers) {
+                  savedAnswers.set(ans.question_id, ans);
+                }
+                // Sync backup to server
+                await assessmentsApi.saveProgress(parseInt(id), backupAnswers);
+                localStorage.removeItem(backupKey);
+              }
+            } catch (e) {
+              console.log('Backup parse error', e);
+            }
+          }
+          
+          if (savedAnswers.size > 0) {
             setAnswers(savedAnswers);
             // Go to first unanswered question
             const firstUnanswered = data.findIndex(q => !savedAnswers.has(q.id));
