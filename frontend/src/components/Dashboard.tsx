@@ -297,7 +297,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800">I tuoi Assessment</h2>
             <p className="text-gray-500 mt-1">Gestisci le valutazioni di maturità digitale</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => handleNewAssessment(1)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200"
@@ -305,15 +305,13 @@ const Dashboard: React.FC = () => {
               <Plus className="w-5 h-5" />
               Assessment Livello 1
             </button>
-            {level2Eligible && (
-              <button
-                onClick={() => handleNewAssessment(2)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
-              >
-                <Plus className="w-5 h-5" />
-                Assessment Livello 2
-              </button>
-            )}
+            <button
+              onClick={() => handleNewAssessment(2)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+            >
+              <Plus className="w-5 h-5" />
+              Assessment Livello 2
+            </button>
           </div>
         </div>
 
