@@ -308,7 +308,7 @@ ${reportData.report}
             </div>
             <div>
               <p className="text-sm text-gray-500">Data Assessment</p>
-              <p className="font-semibold text-gray-800">{new Date().toLocaleDateString('it-IT')}</p>
+              <p className="font-semibold text-gray-800">{new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })}</p>
             </div>
           </div>
         </div>
