@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { questionsLevel2Api, assessmentsApi } from '../api';
 import { Level2Question } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface Level2Answer {
   question_id: number;
@@ -19,6 +20,7 @@ interface Level2Answer {
 const AssessmentLevel2Page: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { organization } = useAuth();
   const [questions, setQuestions] = useState<Level2Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, Level2Answer>>(new Map());
@@ -44,24 +46,41 @@ const AssessmentLevel2Page: React.FC = () => {
       const data = await questionsLevel2Api.getQuestions();
       setQuestions(data.questions);
       
-      // Load saved progress
+      // Pre-populate with organization data
+      const prePopulated = new Map<number, Level2Answer>();
+      if (organization) {
+        // 1.1 Ragione sociale
+        if (organization.name) {
+          prePopulated.set(1, { question_id: 1, value: organization.name });
+        }
+        // 1.3 Codice fiscale/P.IVA
+        if (organization.fiscal_code) {
+          prePopulated.set(3, { question_id: 3, value: organization.fiscal_code });
+        }
+        // 1.4 Email
+        if (organization.email) {
+          prePopulated.set(4, { question_id: 4, value: organization.email });
+        }
+      }
+      
+      // Load saved progress (overrides pre-populated if exists)
       if (id) {
         try {
           const assessment = await assessmentsApi.getById(parseInt(id));
           if (assessment.responses?.answers && assessment.status === 'in_progress') {
-            const savedAnswers = new Map<number, Level2Answer>();
             for (const ans of assessment.responses.answers) {
-              savedAnswers.set(ans.question_id, {
+              prePopulated.set(ans.question_id, {
                 question_id: ans.question_id,
                 value: (ans as any).value || ans.selected_option?.toString() || ''
               });
             }
-            setAnswers(savedAnswers);
           }
         } catch (e) {
           console.log('No saved progress found');
         }
       }
+      
+      setAnswers(prePopulated);
     } catch (error) {
       console.error('Error loading questions:', error);
       alert('Devi completare almeno un assessment di livello 1 prima di accedere al livello 2');
