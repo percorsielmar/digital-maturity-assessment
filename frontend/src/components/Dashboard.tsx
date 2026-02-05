@@ -42,9 +42,12 @@ const Dashboard: React.FC = () => {
   const checkLevel2Eligibility = async () => {
     try {
       const result = await questionsLevel2Api.checkEligibility();
+      console.log('Level 2 eligibility:', result);
       setLevel2Eligible(result.eligible);
     } catch (error) {
       console.error('Error checking level 2 eligibility:', error);
+      // Show button anyway if there's an error (for debugging)
+      setLevel2Eligible(true);
     }
   };
 
