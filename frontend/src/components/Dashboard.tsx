@@ -84,12 +84,13 @@ const Dashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('it-IT', {
+    return new Date(dateString).toLocaleString('it-IT', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Europe/Rome'
     });
   };
 

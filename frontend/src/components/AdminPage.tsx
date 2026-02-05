@@ -513,7 +513,7 @@ const AdminPage: React.FC = () => {
                     </div>
                     <div className="text-right flex flex-col items-end gap-2">
                       <p className="text-sm text-gray-500">
-                        Registrato: {org.created_at ? new Date(org.created_at).toLocaleDateString('it-IT') : 'N/A'}
+                        Registrato: {org.created_at ? new Date(org.created_at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'N/A'}
                       </p>
                       <p className="text-sm font-medium text-primary-600">
                         {org.assessments_count} assessment
@@ -552,7 +552,7 @@ const AdminPage: React.FC = () => {
                               </p>
                               <p className="text-xs text-gray-500">
                                 {assessment.created_at 
-                                  ? new Date(assessment.created_at).toLocaleDateString('it-IT')
+                                  ? new Date(assessment.created_at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
                                   : 'N/A'}
                               </p>
                             </div>
