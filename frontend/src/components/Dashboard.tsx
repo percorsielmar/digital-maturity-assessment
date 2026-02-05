@@ -9,17 +9,29 @@ import {
   Building2,
   Clock,
   CheckCircle2,
-  Download
+  Download,
+  Edit2,
+  Save,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { assessmentsApi } from '../api';
+import { assessmentsApi, organizationApi } from '../api';
 import { Assessment } from '../types';
 
 const Dashboard: React.FC = () => {
-  const { organization, logout } = useAuth();
+  const { organization, logout, updateOrganization } = useAuth();
   const navigate = useNavigate();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    admin_name: organization?.admin_name || '',
+    fiscal_code: organization?.fiscal_code || '',
+    phone: organization?.phone || '',
+    sector: organization?.sector || '',
+    size: organization?.size || ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     loadAssessments();
@@ -48,6 +60,20 @@ const Dashboard: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const updatedOrg = await organizationApi.update(profileData);
+      updateOrganization(updatedOrg);
+      setEditingProfile(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Errore nel salvataggio. Riprova.');
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -122,6 +148,132 @@ const Dashboard: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Profile Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Dati Organizzazione</h3>
+            {!editingProfile ? (
+              <button
+                onClick={() => setEditingProfile(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 rounded-lg"
+              >
+                <Edit2 className="w-4 h-4" />
+                Modifica
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingProfile(false)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                  Annulla
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingProfile ? 'Salvataggio...' : 'Salva'}
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {editingProfile ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Responsabile</label>
+                <input
+                  type="text"
+                  value={profileData.admin_name}
+                  onChange={(e) => setProfileData({...profileData, admin_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Nome e cognome"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">C.F. / P.IVA</label>
+                <input
+                  type="text"
+                  value={profileData.fiscal_code}
+                  onChange={(e) => setProfileData({...profileData, fiscal_code: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Codice fiscale o P.IVA"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                <input
+                  type="tel"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="+39 xxx xxx xxxx"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Settore</label>
+                <select
+                  value={profileData.sector}
+                  onChange={(e) => setProfileData({...profileData, sector: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Seleziona settore</option>
+                  <option value="manifatturiero">Manifatturiero</option>
+                  <option value="servizi">Servizi</option>
+                  <option value="commercio">Commercio</option>
+                  <option value="tecnologia">Tecnologia</option>
+                  <option value="sanita">Sanità</option>
+                  <option value="istruzione">Istruzione</option>
+                  <option value="finanza">Finanza</option>
+                  <option value="pubblica_amministrazione">Pubblica Amministrazione</option>
+                  <option value="altro">Altro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dimensione</label>
+                <select
+                  value={profileData.size}
+                  onChange={(e) => setProfileData({...profileData, size: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Seleziona dimensione</option>
+                  <option value="1-10">1-10 dipendenti</option>
+                  <option value="11-50">11-50 dipendenti</option>
+                  <option value="51-250">51-250 dipendenti</option>
+                  <option value="251-1000">251-1000 dipendenti</option>
+                  <option value="1000+">Oltre 1000 dipendenti</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500">Responsabile</p>
+                <p className="font-medium text-gray-800">{organization?.admin_name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">C.F. / P.IVA</p>
+                <p className="font-medium text-gray-800">{organization?.fiscal_code || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Telefono</p>
+                <p className="font-medium text-gray-800">{organization?.phone || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Settore</p>
+                <p className="font-medium text-gray-800">{organization?.sector || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Dimensione</p>
+                <p className="font-medium text-gray-800">{organization?.size || '-'}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">I tuoi Assessment</h2>

@@ -13,7 +13,8 @@ import {
   BarChart3,
   Key,
   X,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import html2canvas from 'html2canvas';
@@ -152,6 +153,36 @@ const AdminPage: React.FC = () => {
       console.error('Error loading assessment:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteAssessment = async (assessmentId: number) => {
+    if (!confirm('Sei sicuro di voler eliminare questo assessment?')) return;
+    
+    try {
+      const response = await fetch(`${API_BASE}/admin/assessments/${assessmentId}?admin_key=${adminKey}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        handleLogin();
+      }
+    } catch (err) {
+      console.error('Error deleting assessment:', err);
+    }
+  };
+
+  const deleteOrganization = async (orgId: number, orgName: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare "${orgName}" e tutti i suoi assessment?`)) return;
+    
+    try {
+      const response = await fetch(`${API_BASE}/admin/organizations/${orgId}?admin_key=${adminKey}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        handleLogin();
+      }
+    } catch (err) {
+      console.error('Error deleting organization:', err);
     }
   };
 
@@ -488,13 +519,22 @@ const AdminPage: React.FC = () => {
                       <p className="text-sm font-medium text-primary-600">
                         {org.assessments_count} assessment
                       </p>
-                      <button
-                        onClick={() => setResetPasswordModal({open: true, orgId: org.id, orgName: org.name})}
-                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1 rounded"
-                      >
-                        <Key className="w-3 h-3" />
-                        Reset Password
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setResetPasswordModal({open: true, orgId: org.id, orgName: org.name})}
+                          className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1 rounded"
+                        >
+                          <Key className="w-3 h-3" />
+                          Reset Password
+                        </button>
+                        <button
+                          onClick={() => deleteOrganization(org.id, org.name)}
+                          className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Elimina
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -539,6 +579,12 @@ const AdminPage: React.FC = () => {
                                 <Eye className="w-5 h-5" />
                               </button>
                             )}
+                            <button
+                              onClick={() => deleteAssessment(assessment.id)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       ))}

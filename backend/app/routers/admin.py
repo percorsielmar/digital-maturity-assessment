@@ -166,3 +166,58 @@ async def reset_password(
         "organization_id": organization.id,
         "access_code": organization.access_code
     }
+
+@router.delete("/assessments/{assessment_id}")
+async def delete_assessment(
+    assessment_id: int,
+    admin_key: str,
+    db: AsyncSession = Depends(get_db)
+):
+    verify_admin_key(admin_key)
+    
+    result = await db.execute(
+        select(Assessment).where(Assessment.id == assessment_id)
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    await db.delete(assessment)
+    await db.commit()
+    
+    return {"success": True, "message": f"Assessment #{assessment_id} eliminato"}
+
+@router.delete("/organizations/{organization_id}")
+async def delete_organization(
+    organization_id: int,
+    admin_key: str,
+    db: AsyncSession = Depends(get_db)
+):
+    verify_admin_key(admin_key)
+    
+    result = await db.execute(
+        select(Organization).where(Organization.id == organization_id)
+    )
+    organization = result.scalar_one_or_none()
+    
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organizzazione non trovata"
+        )
+    
+    assessments_result = await db.execute(
+        select(Assessment).where(Assessment.organization_id == organization_id)
+    )
+    assessments = assessments_result.scalars().all()
+    for assessment in assessments:
+        await db.delete(assessment)
+    
+    await db.delete(organization)
+    await db.commit()
+    
+    return {"success": True, "message": f"Organizzazione '{organization.name}' e tutti i suoi assessment eliminati"}
