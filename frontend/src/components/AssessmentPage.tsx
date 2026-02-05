@@ -82,7 +82,9 @@ const AssessmentPage: React.FC = () => {
       if (id) {
         try {
           const assessment = await assessmentsApi.getById(parseInt(id));
-          if (assessment.responses?.answers && assessment.status === 'in_progress') {
+          console.log('Loaded assessment:', assessment);
+          console.log('Responses:', assessment.responses);
+          if (assessment.responses && assessment.responses.answers && assessment.responses.answers.length > 0 && assessment.status === 'in_progress') {
             const savedAnswers = new Map<number, Answer>();
             for (const ans of assessment.responses.answers) {
               savedAnswers.set(ans.question_id, {
@@ -91,6 +93,7 @@ const AssessmentPage: React.FC = () => {
                 notes: ans.notes || ''
               });
             }
+            console.log('Restored answers:', savedAnswers.size);
             setAnswers(savedAnswers);
             // Go to first unanswered question
             const firstUnanswered = data.findIndex(q => !savedAnswers.has(q.id));
@@ -101,7 +104,7 @@ const AssessmentPage: React.FC = () => {
             }
           }
         } catch (e) {
-          console.log('No saved progress found');
+          console.log('No saved progress found', e);
         }
       }
     } catch (error) {
@@ -126,7 +129,9 @@ const AssessmentPage: React.FC = () => {
     if (id) {
       try {
         const answersArray = Array.from(newAnswers.values());
-        await assessmentsApi.saveProgress(parseInt(id), answersArray);
+        console.log('Saving progress:', answersArray.length, 'answers');
+        const result = await assessmentsApi.saveProgress(parseInt(id), answersArray);
+        console.log('Save result:', result);
       } catch (error) {
         console.error('Error auto-saving:', error);
       }
