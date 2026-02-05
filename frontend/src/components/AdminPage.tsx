@@ -548,7 +548,7 @@ const AdminPage: React.FC = () => {
                             <FileText className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm font-medium text-gray-700">
-                                Assessment #{assessment.id}
+                                {(assessment as any).level === 2 ? 'Assessment 2' : 'Assessment 1'} <span className="text-gray-400">#{assessment.id}</span>
                               </p>
                               <p className="text-xs text-gray-500">
                                 {assessment.created_at 

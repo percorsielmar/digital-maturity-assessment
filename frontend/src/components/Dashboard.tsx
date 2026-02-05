@@ -351,10 +351,8 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-800">
-                        Assessment #{assessment.id}
-                        <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${assessment.level === 2 ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>
-                          Livello {assessment.level || 1}
-                        </span>
+                        {assessment.level === 2 ? 'Assessment 2' : 'Assessment 1'} 
+                        <span className="text-gray-400 font-normal ml-1">#{assessment.id}</span>
                       </h3>
                       <p className="text-sm text-gray-500">
                         Creato il {formatDate(assessment.created_at)}
