@@ -170,4 +170,33 @@ export const questionsLevel2Api = {
   },
 };
 
+export const healthApi = {
+  check: async () => {
+    // Health endpoint è alla root, non sotto /api
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+    const response = await axios.get<{ stato: string }>(`${baseUrl}/health`, { timeout: 90000 });
+    return response.data;
+  },
+  
+  wakeUp: async (onProgress?: (status: string) => void): Promise<boolean> => {
+    const maxRetries = 3;
+    const retryDelay = 5000;
+    
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        if (onProgress) {
+          onProgress(i === 0 ? 'Connessione al server...' : `Tentativo ${i + 1}/${maxRetries}...`);
+        }
+        await healthApi.check();
+        return true;
+      } catch (error) {
+        if (i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+    return false;
+  }
+};
+
 export default api;

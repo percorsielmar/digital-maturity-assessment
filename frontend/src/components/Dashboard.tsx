@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { assessmentsApi, organizationApi } from '../api';
+import { assessmentsApi, organizationApi, healthApi } from '../api';
 import { Assessment } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -49,29 +49,65 @@ const Dashboard: React.FC = () => {
   };
 
   const [creatingAssessment, setCreatingAssessment] = useState(false);
+  const [serverStatus, setServerStatus] = useState<string | null>(null);
 
   const handleNewAssessment = async (level: number = 1) => {
     if (creatingAssessment) return;
     setCreatingAssessment(true);
-    try {
-      console.log('Creating assessment level:', level);
-      const assessment = await assessmentsApi.create(level);
-      console.log('Created assessment:', assessment);
-      if (level === 2) {
-        navigate(`/assessment-level2/${assessment.id}`);
-      } else {
-        navigate(`/assessment/${assessment.id}`);
+    setServerStatus('Connessione al server...');
+    
+    const maxRetries = 3;
+    let lastError: any = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          setServerStatus(`Il server si sta avviando... Tentativo ${attempt + 1}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+        
+        // Prima sveglia il server con health check
+        if (attempt === 0) {
+          try {
+            await healthApi.check();
+          } catch {
+            setServerStatus('Server in avvio, attendere (può richiedere fino a 60 secondi)...');
+            await healthApi.wakeUp((status) => setServerStatus(status));
+          }
+        }
+        
+        setServerStatus('Creazione assessment...');
+        const assessment = await assessmentsApi.create(level);
+        setServerStatus(null);
+        
+        if (level === 2) {
+          navigate(`/assessment-level2/${assessment.id}`);
+        } else {
+          navigate(`/assessment/${assessment.id}`);
+        }
+        return;
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Attempt ${attempt + 1} failed:`, error);
+        
+        // Se è un errore 403 (non autorizzato per livello 2), non ritentare
+        if (error?.response?.status === 403) {
+          setServerStatus(null);
+          alert(error?.response?.data?.detail || 'Devi completare almeno un assessment di livello 1');
+          setCreatingAssessment(false);
+          return;
+        }
       }
-    } catch (error: any) {
-      console.error('Error creating assessment:', error);
-      if (error.code === 'ECONNABORTED' || error.message?.includes('Network')) {
-        alert('Il server sta avviando, riprova tra qualche secondo...');
-      } else {
-        alert(`Errore: ${error?.response?.data?.detail || error.message || 'Errore sconosciuto'}`);
-      }
-    } finally {
-      setCreatingAssessment(false);
     }
+    
+    // Tutti i tentativi falliti
+    setServerStatus(null);
+    if (lastError?.code === 'ECONNABORTED' || lastError?.message?.includes('Network') || lastError?.message?.includes('timeout')) {
+      alert('Il server non risponde. Verifica la connessione e riprova tra qualche minuto.');
+    } else {
+      alert(`Errore: ${lastError?.response?.data?.detail || lastError?.message || 'Errore sconosciuto'}`);
+    }
+    setCreatingAssessment(false);
   };
 
   const handleLogout = () => {
@@ -308,7 +344,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <Plus className="w-5 h-5" />
               )}
-              {creatingAssessment ? 'Caricamento...' : 'Assessment Livello 1'}
+              Assessment Livello 1
             </button>
             <button
               onClick={() => handleNewAssessment(2)}
@@ -320,9 +356,15 @@ const Dashboard: React.FC = () => {
               ) : (
                 <Plus className="w-5 h-5" />
               )}
-              {creatingAssessment ? 'Caricamento...' : 'Assessment Livello 2'}
+              Assessment Livello 2
             </button>
           </div>
+          {serverStatus && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              {serverStatus}
+            </div>
+          )}
         </div>
 
         {loading ? (

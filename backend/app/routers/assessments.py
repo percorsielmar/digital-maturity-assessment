@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 from typing import List
 from datetime import datetime
 
@@ -19,21 +19,29 @@ async def create_assessment(
     db: AsyncSession = Depends(get_db)
 ):
     
-    # For level 2, check if at least one level 1 is completed (level=1 or level=NULL)
+    # For level 2, check if at least one assessment is completed
     if level == 2:
+        # Cerca TUTTI gli assessment dell'organizzazione per debug
         result = await db.execute(
             select(Assessment)
-            .where(
-                Assessment.organization_id == organization.id,
-                or_(Assessment.level == 1, Assessment.level == None),
-                Assessment.status == "completed"
-            )
+            .where(Assessment.organization_id == organization.id)
         )
-        completed_level1 = result.scalar_one_or_none()
+        all_assessments = result.scalars().all()
+        
+        # Log per debug
+        print(f"[DEBUG] Organization {organization.id} - All assessments:")
+        for a in all_assessments:
+            print(f"  - ID: {a.id}, Level: {a.level}, Status: {a.status}")
+        
+        # Cerca assessment completati di livello 1 (o senza livello = vecchi)
+        completed_level1 = [a for a in all_assessments if a.status == "completed" and a.level != 2]
+        
+        print(f"[DEBUG] Completed Level 1 assessments: {len(completed_level1)}")
+        
         if not completed_level1:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="È necessario completare almeno un assessment di livello 1 prima di accedere al livello 2"
+                detail=f"È necessario completare almeno un assessment di livello 1 prima di accedere al livello 2. Trovati {len(all_assessments)} assessment totali."
             )
     
     assessment = Assessment(
@@ -197,6 +205,33 @@ async def submit_assessment(
     await db.refresh(assessment)
     
     return AssessmentResponse.model_validate(assessment)
+
+@router.get("/debug/check-level1")
+async def debug_check_level1(
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    """Debug endpoint to check level 1 assessment status."""
+    result = await db.execute(
+        select(Assessment)
+        .where(Assessment.organization_id == organization.id)
+    )
+    all_assessments = result.scalars().all()
+    
+    return {
+        "organization_id": organization.id,
+        "total_assessments": len(all_assessments),
+        "assessments": [
+            {
+                "id": a.id,
+                "level": a.level,
+                "status": a.status,
+                "created_at": str(a.created_at) if a.created_at else None,
+                "completed_at": str(a.completed_at) if a.completed_at else None
+            }
+            for a in all_assessments
+        ]
+    }
 
 @router.get("/{assessment_id}/report")
 async def get_report(

@@ -1,0 +1,167 @@
+================================================================================
+DIGITAL MATURITY ASSESSMENT - REPORT RIASSUNTIVO PROGETTO
+================================================================================
+Data: 6 Febbraio 2026
+
+================================================================================
+DESCRIZIONE PROGETTO
+================================================================================
+Applicazione web per la valutazione della maturità digitale di aziende e 
+pubbliche amministrazioni. Include questionari di livello 1 e 2, generazione 
+report PDF, pannello admin, e assistente AI.
+
+================================================================================
+ARCHITETTURA
+================================================================================
+- Frontend: React + TypeScript + TailwindCSS + Vite
+- Backend: FastAPI (Python) + SQLAlchemy async
+- Database: PostgreSQL (Neon)
+- Hosting Frontend: Vercel
+- Hosting Backend: Render
+
+================================================================================
+ACCESSI E CREDENZIALI
+================================================================================
+
+--- GITHUB ---
+Repository: https://github.com/percorsielmar/digital-maturity-assessment
+(Accesso tramite account GitHub dell'utente)
+
+--- VERCEL (Frontend) ---
+URL Produzione: https://digital-maturity-assessment.vercel.app
+Dashboard: https://vercel.com/dashboard
+(Accesso tramite account Vercel dell'utente collegato a GitHub)
+
+--- RENDER (Backend) ---
+URL API: https://digital-maturity-assessment.onrender.com
+Dashboard: https://dashboard.render.com
+Servizio: digital-maturity-assessment
+(Accesso tramite account Render dell'utente)
+
+Variabili d'ambiente configurate su Render:
+- DATABASE_URL: (connessione Neon PostgreSQL)
+- SECRET_KEY: (chiave JWT)
+- OPENAI_API_KEY: (non configurata - richiede crediti OpenAI)
+
+--- NEON (Database PostgreSQL) ---
+Dashboard: https://console.neon.tech
+Database: digital-maturity-assessment
+(Accesso tramite account Neon dell'utente)
+
+La stringa di connessione DATABASE_URL è configurata nelle variabili 
+d'ambiente di Render.
+
+--- ADMIN PANEL ---
+URL: https://digital-maturity-assessment.vercel.app/admin
+Chiave Admin: Configurata nelle variabili d'ambiente di Render (ADMIN_KEY)
+
+================================================================================
+FUNZIONALITÀ IMPLEMENTATE
+================================================================================
+
+[✓] Struttura progetto frontend (React) e backend (FastAPI)
+[✓] Backend con autenticazione JWT, API questionari, storage dati
+[✓] Frontend con login, questionario, pagina risultati (kiosk-ready)
+[✓] Deploy su Vercel (frontend) + Render (backend)
+[✓] Pannello admin con reset password
+[✓] Autenticazione Google OAuth
+[✓] Database persistente con Neon PostgreSQL
+[✓] Campi registrazione: codice fiscale, telefono, nome admin
+[✓] Dettagli organizzazione nel report generato
+[✓] Download PDF con grafici (report e dashboard)
+[✓] Tooltip statici con spiegazioni per ogni domanda
+[✓] Chatbot AI assistente (richiede API key OpenAI con crediti)
+[✓] Pulsante download PDF nel pannello admin
+[✓] Sezione profilo modificabile nella Dashboard
+[✓] Funzionalità admin per eliminare assessment e organizzazioni
+[✓] Auto-save per compatibilità tablet
+[✓] Assessment Livello 2 con domande dettagliate
+[✓] Fuso orario Italia (Europe/Rome) per tutte le date
+[✓] Nomi differenziati: "Assessment 1" e "Assessment 2"
+[✓] Pre-popolamento campi Assessment 2 con dati organizzazione
+[✓] Dati organizzazione completi nei report (P.IVA, telefono, email, ecc.)
+[✓] PDF multi-pagina (supporto report lunghi)
+
+================================================================================
+STRUTTURA FILE PRINCIPALI
+================================================================================
+
+backend/
+├── main.py                 # Entry point FastAPI, migrations
+├── app/
+│   ├── auth.py            # Autenticazione JWT
+│   ├── database.py        # Connessione database
+│   ├── models.py          # Modelli SQLAlchemy (Organization, Assessment, Question)
+│   ├── schemas.py         # Schemi Pydantic
+│   ├── questions_data.py  # Domande Assessment Livello 1
+│   ├── questions_level2_data.py  # Domande Assessment Livello 2
+│   ├── crew_agents.py     # Analisi AI per report
+│   └── routers/
+│       ├── auth.py        # Endpoint autenticazione
+│       ├── questions.py   # Endpoint domande livello 1
+│       ├── questions_level2.py  # Endpoint domande livello 2
+│       ├── assessments.py # Endpoint assessment (create, submit, progress)
+│       ├── admin.py       # Endpoint pannello admin
+│       └── assistant.py   # Endpoint chatbot AI
+
+frontend/
+├── src/
+│   ├── App.tsx            # Routing principale
+│   ├── api.ts             # Client API axios
+│   ├── types.ts           # TypeScript interfaces
+│   ├── context/
+│   │   └── AuthContext.tsx  # Context autenticazione
+│   └── components/
+│       ├── LoginPage.tsx       # Pagina login/registrazione
+│       ├── Dashboard.tsx       # Dashboard utente
+│       ├── AssessmentPage.tsx  # Questionario livello 1
+│       ├── AssessmentLevel2Page.tsx  # Questionario livello 2
+│       ├── ReportPage.tsx      # Visualizzazione report
+│       └── AdminPage.tsx       # Pannello amministrazione
+
+================================================================================
+PROBLEMI NOTI / DA RISOLVERE
+================================================================================
+
+1. Assessment Livello 2 - Errore "Devi completare almeno un assessment di 
+   livello 1": La query di verifica potrebbe non riconoscere correttamente 
+   gli assessment completati. Verificare che lo status sia "completed" e 
+   che il campo level sia 1 o NULL.
+
+2. Assistente AI non funzionante: Richiede API key OpenAI con crediti attivi.
+   L'utente ha rinunciato a configurarlo per ora.
+
+3. Backend Render (free tier): Si "addormenta" dopo inattività. Il primo 
+   click può richiedere 30-60 secondi per il risveglio.
+
+================================================================================
+COMANDI UTILI
+================================================================================
+
+# Avviare backend localmente
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+# Avviare frontend localmente
+cd frontend
+npm install
+npm run dev
+
+# Deploy manuale
+git add .
+git commit -m "descrizione"
+git push
+# Vercel deploya automaticamente
+# Render deploya automaticamente (o Manual Deploy dalla dashboard)
+
+================================================================================
+NOTE AGGIUNTIVE
+================================================================================
+
+- Il progetto usa il free tier di tutti i servizi (Vercel, Render, Neon)
+- Per produzione si consiglia upgrade a piani a pagamento per evitare 
+  limitazioni (sleep del backend, limiti database, ecc.)
+- Le API key sensibili sono nelle variabili d'ambiente, mai nel codice
+
+================================================================================
