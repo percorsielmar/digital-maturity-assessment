@@ -48,7 +48,11 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const [creatingAssessment, setCreatingAssessment] = useState(false);
+
   const handleNewAssessment = async (level: number = 1) => {
+    if (creatingAssessment) return;
+    setCreatingAssessment(true);
     try {
       console.log('Creating assessment level:', level);
       const assessment = await assessmentsApi.create(level);
@@ -60,7 +64,13 @@ const Dashboard: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error creating assessment:', error);
-      alert(`Errore: ${error?.response?.data?.detail || error.message || 'Errore sconosciuto'}`);
+      if (error.code === 'ECONNABORTED' || error.message?.includes('Network')) {
+        alert('Il server sta avviando, riprova tra qualche secondo...');
+      } else {
+        alert(`Errore: ${error?.response?.data?.detail || error.message || 'Errore sconosciuto'}`);
+      }
+    } finally {
+      setCreatingAssessment(false);
     }
   };
 
@@ -290,17 +300,27 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => handleNewAssessment(1)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200"
+              disabled={creatingAssessment}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200 disabled:opacity-50"
             >
-              <Plus className="w-5 h-5" />
-              Assessment Livello 1
+              {creatingAssessment ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
+              {creatingAssessment ? 'Caricamento...' : 'Assessment Livello 1'}
             </button>
             <button
               onClick={() => handleNewAssessment(2)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+              disabled={creatingAssessment}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg shadow-green-200 disabled:opacity-50"
             >
-              <Plus className="w-5 h-5" />
-              Assessment Livello 2
+              {creatingAssessment ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
+              {creatingAssessment ? 'Caricamento...' : 'Assessment Livello 2'}
             </button>
           </div>
         </div>
