@@ -70,6 +70,15 @@ async def get_assessments(
     assessments = result.scalars().all()
     return [AssessmentSummary.model_validate(a) for a in assessments]
 
+@router.get("/staff-profiles")
+async def get_staff_profiles_endpoint():
+    """Restituisce le schede profilo del personale DIH per rendicontazione UE"""
+    profiles = get_staff_profiles()
+    return {
+        "profiles": profiles,
+        "description": "Schede profilo del personale coinvolto nel programma Digital Maturity Assessment - Rome DIH"
+    }
+
 @router.get("/{assessment_id}", response_model=AssessmentResponse)
 async def get_assessment(
     assessment_id: int,
@@ -309,15 +318,6 @@ async def get_audit_sheet(
         "organization_type": organization.type,
         "maturity_level": assessment.maturity_level,
         "completed_at": assessment.completed_at
-    }
-
-@router.get("/staff-profiles")
-async def get_staff_profiles_endpoint():
-    """Restituisce le schede profilo del personale DIH per rendicontazione UE"""
-    profiles = get_staff_profiles()
-    return {
-        "profiles": profiles,
-        "description": "Schede profilo del personale coinvolto nel programma Digital Maturity Assessment - Rome DIH"
     }
 
 @router.get("/{assessment_id}/full-documentation")
