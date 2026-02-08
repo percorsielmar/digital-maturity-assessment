@@ -10,12 +10,30 @@ from app.routers import auth, questions, assessments, admin, assistant, question
 
 async def run_migrations():
     async with engine.begin() as conn:
-        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS fiscal_code VARCHAR(50)"))
-        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
-        await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
-        await conn.execute(text("ALTER TABLE questions ADD COLUMN IF NOT EXISTS hint TEXT"))
-        await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1"))
-        await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS audit_sheet TEXT"))
+        try:
+            await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS fiscal_code VARCHAR(50)"))
+        except Exception as e:
+            print(f"Migration fiscal_code: {e}")
+        try:
+            await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
+        except Exception as e:
+            print(f"Migration phone: {e}")
+        try:
+            await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
+        except Exception as e:
+            print(f"Migration admin_name: {e}")
+        try:
+            await conn.execute(text("ALTER TABLE questions ADD COLUMN IF NOT EXISTS hint TEXT"))
+        except Exception as e:
+            print(f"Migration hint: {e}")
+        try:
+            await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1"))
+        except Exception as e:
+            print(f"Migration level: {e}")
+        try:
+            await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS audit_sheet TEXT"))
+        except Exception as e:
+            print(f"Migration audit_sheet: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
