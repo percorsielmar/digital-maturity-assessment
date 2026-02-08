@@ -32,6 +32,7 @@ class Assessment(Base):
     scores = Column(JSON, default=dict)
     gap_analysis = Column(JSON, default=dict)
     report = Column(Text)
+    audit_sheet = Column(Text)
     maturity_level = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)

@@ -115,10 +115,60 @@ export const assessmentsApi = {
   getReport: async (id: number) => {
     const response = await api.get<{
       report: string;
+      audit_sheet: string;
       scores: Record<string, number>;
       maturity_level: number;
       gap_analysis: Record<string, any>;
     }>(`/assessments/${id}/report`);
+    return response.data;
+  },
+
+  getAuditSheet: async (id: number) => {
+    const response = await api.get<{
+      audit_sheet: string;
+      organization_name: string;
+      organization_type: string;
+      maturity_level: number;
+      completed_at: string;
+    }>(`/assessments/${id}/audit-sheet`);
+    return response.data;
+  },
+
+  getStaffProfiles: async () => {
+    const response = await api.get<{
+      profiles: {
+        digital_transformation_expert: string;
+        process_innovation_analyst: string;
+      };
+      description: string;
+    }>('/assessments/staff-profiles');
+    return response.data;
+  },
+
+  getFullDocumentation: async (id: number) => {
+    const response = await api.get<{
+      organization: {
+        name: string;
+        type: string;
+        sector: string;
+        size: string;
+      };
+      assessment: {
+        id: number;
+        maturity_level: number;
+        scores: Record<string, number>;
+        gap_analysis: Record<string, any>;
+        completed_at: string;
+      };
+      documents: {
+        report: string;
+        audit_sheet: string;
+        staff_profiles: {
+          digital_transformation_expert: string;
+          process_innovation_analyst: string;
+        };
+      };
+    }>(`/assessments/${id}/full-documentation`);
     return response.data;
   },
 };

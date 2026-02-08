@@ -15,6 +15,7 @@ async def run_migrations():
         await conn.execute(text("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS admin_name VARCHAR(255)"))
         await conn.execute(text("ALTER TABLE questions ADD COLUMN IF NOT EXISTS hint TEXT"))
         await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1"))
+        await conn.execute(text("ALTER TABLE assessments ADD COLUMN IF NOT EXISTS audit_sheet TEXT"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

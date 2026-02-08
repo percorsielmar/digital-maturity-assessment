@@ -6,9 +6,10 @@ from pydantic import BaseModel
 import os
 
 from app.database import get_db
-from app.models import Organization, Assessment
+from app.models import Organization, Assessment, Question
 from app.schemas import OrganizationResponse, AssessmentSummary
 from app.auth import get_password_hash
+from app.crew_agents import run_crew_analysis, get_staff_profiles
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -103,13 +104,18 @@ async def get_assessment_detail(
             "name": organization.name,
             "type": organization.type,
             "sector": organization.sector,
-            "size": organization.size
+            "size": organization.size,
+            "email": organization.email,
+            "fiscal_code": organization.fiscal_code,
+            "phone": organization.phone,
+            "admin_name": organization.admin_name
         } if organization else None,
         "status": assessment.status,
         "maturity_level": assessment.maturity_level,
         "scores": assessment.scores,
         "gap_analysis": assessment.gap_analysis,
         "report": assessment.report,
+        "audit_sheet": assessment.audit_sheet,
         "responses": assessment.responses,
         "created_at": assessment.created_at.isoformat() if assessment.created_at else None,
         "completed_at": assessment.completed_at.isoformat() if assessment.completed_at else None
@@ -221,3 +227,92 @@ async def delete_organization(
     await db.commit()
     
     return {"success": True, "message": f"Organizzazione '{organization.name}' e tutti i suoi assessment eliminati"}
+
+@router.post("/assessments/{assessment_id}/regenerate")
+async def regenerate_assessment_report(
+    assessment_id: int,
+    admin_key: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Rigenera il report DIH per un assessment esistente"""
+    verify_admin_key(admin_key)
+    
+    result = await db.execute(
+        select(Assessment).where(Assessment.id == assessment_id)
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    if assessment.status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo gli assessment completati possono essere rigenerati"
+        )
+    
+    org_result = await db.execute(
+        select(Organization).where(Organization.id == assessment.organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+    
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organizzazione non trovata"
+        )
+    
+    questions_result = await db.execute(select(Question))
+    questions = questions_result.scalars().all()
+    questions_list = [
+        {
+            "id": q.id,
+            "category": q.category,
+            "subcategory": q.subcategory,
+            "text": q.text,
+            "options": q.options,
+            "weight": q.weight
+        }
+        for q in questions
+    ]
+    
+    organization_info = {
+        "name": organization.name,
+        "type": organization.type,
+        "sector": organization.sector,
+        "size": organization.size
+    }
+    
+    analysis_result = await run_crew_analysis(
+        assessment.responses or {},
+        questions_list,
+        organization_info
+    )
+    
+    assessment.scores = analysis_result.get("scores", {})
+    assessment.gap_analysis = analysis_result.get("gap_analysis", {})
+    assessment.maturity_level = analysis_result.get("overall_maturity", 0)
+    assessment.report = analysis_result.get("report", "")
+    assessment.audit_sheet = analysis_result.get("audit_sheet", "")
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Report rigenerato per assessment #{assessment_id}",
+        "maturity_level": assessment.maturity_level,
+        "has_audit_sheet": bool(assessment.audit_sheet)
+    }
+
+@router.get("/staff-profiles")
+async def get_admin_staff_profiles(admin_key: str):
+    """Restituisce le schede profilo del personale DIH"""
+    verify_admin_key(admin_key)
+    profiles = get_staff_profiles()
+    return {
+        "profiles": profiles,
+        "description": "Schede profilo del personale DIH per rendicontazione UE"
+    }

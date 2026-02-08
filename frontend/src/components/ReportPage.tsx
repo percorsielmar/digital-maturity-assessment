@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface ReportData {
   report: string;
+  audit_sheet?: string;
   scores: Record<string, number>;
   maturity_level: number;
   gap_analysis: Record<string, {
@@ -43,14 +44,20 @@ interface ReportData {
   }>;
 }
 
+interface StaffProfiles {
+  digital_transformation_expert: string;
+  process_innovation_analyst: string;
+}
+
 const ReportPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { organization } = useAuth();
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [staffProfiles, setStaffProfiles] = useState<StaffProfiles | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'report'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'report' | 'audit' | 'staff'>('overview');
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [autoDownloadTriggered, setAutoDownloadTriggered] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
@@ -71,8 +78,12 @@ const ReportPage: React.FC = () => {
   const loadReport = async () => {
     if (!id) return;
     try {
-      const data = await assessmentsApi.getReport(parseInt(id));
-      setReportData(data);
+      const [reportResponse, profilesResponse] = await Promise.all([
+        assessmentsApi.getReport(parseInt(id)),
+        assessmentsApi.getStaffProfiles()
+      ]);
+      setReportData(reportResponse);
+      setStaffProfiles(profilesResponse.profiles);
     } catch (error) {
       console.error('Error loading report:', error);
     } finally {
@@ -100,33 +111,100 @@ const ReportPage: React.FC = () => {
   const handleDownloadReport = () => {
     if (!reportData) return;
     
-    const orgDetails = `# Report Valutazione Maturità Digitale
-
-## Dati Organizzazione
-- **Ragione Sociale:** ${organization?.name || '-'}
-- **Tipologia:** ${organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Azienda Privata'}
-- **Settore:** ${organization?.sector || '-'}
-- **Dimensione:** ${organization?.size || '-'}
-- **C.F. / P.IVA:** ${organization?.fiscal_code || '-'}
-- **Telefono:** ${organization?.phone || '-'}
-- **Email:** ${organization?.email || '-'}
-- **Referente Compilazione:** ${organization?.admin_name || '-'}
-- **Data Assessment:** ${new Date().toLocaleDateString('it-IT')}
-
----
-
-## Livello di Maturità Digitale: ${reportData.maturity_level.toFixed(1)} / 5
-
----
-
-${reportData.report}
-`;
-    
-    const blob = new Blob([orgDetails], { type: 'text/markdown' });
+    const blob = new Blob([reportData.report], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `report-maturity-${organization?.name || 'assessment'}-${id}.md`;
+    a.download = `report-dih-${organization?.name || 'assessment'}-${id}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadAuditSheet = () => {
+    if (!reportData?.audit_sheet) return;
+    
+    const blob = new Blob([reportData.audit_sheet], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scheda-audit-${organization?.name || 'assessment'}-${id}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadStaffProfiles = () => {
+    if (!staffProfiles) return;
+    
+    const content = `# SCHEDE PROFILO PERSONALE DIH
+
+---
+
+${staffProfiles.digital_transformation_expert}
+
+---
+
+${staffProfiles.process_innovation_analyst}
+
+---
+
+*Rome Digital Innovation Hub - Programma Digital Maturity Assessment*
+`;
+    
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `profili-staff-dih.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadFullDocumentation = () => {
+    if (!reportData || !staffProfiles) return;
+    
+    const fullDoc = `# DOCUMENTAZIONE COMPLETA - DIGITAL MATURITY ASSESSMENT
+
+## Rome Digital Innovation Hub
+
+---
+
+# PARTE 1: REPORT DI MATURITÀ DIGITALE
+
+${reportData.report}
+
+---
+
+# PARTE 2: SCHEDA DI AUDIT
+
+${reportData.audit_sheet || 'Non disponibile'}
+
+---
+
+# PARTE 3: PROFILI DEL PERSONALE
+
+${staffProfiles.digital_transformation_expert}
+
+---
+
+${staffProfiles.process_innovation_analyst}
+
+---
+
+*Documentazione generata nell'ambito del progetto DIH - Digital Maturity Assessment*
+*Data: ${new Date().toLocaleDateString('it-IT')}*
+`;
+    
+    const blob = new Blob([fullDoc], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `documentazione-completa-dih-${organization?.name || 'assessment'}-${id}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -254,7 +332,15 @@ ${reportData.report}
                 <p className="text-sm text-gray-500">{organization?.name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadFullDocumentation}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors"
+                title="Scarica tutta la documentazione DIH"
+              >
+                <Download className="w-5 h-5" />
+                <span className="hidden lg:inline">Documentazione DIH</span>
+              </button>
               <button
                 onClick={handleDownloadPdf}
                 disabled={generatingPdf}
@@ -265,21 +351,13 @@ ${reportData.report}
                 ) : (
                   <FileText className="w-5 h-5" />
                 )}
-                <span className="hidden sm:inline">{generatingPdf ? 'Generando...' : 'Scarica PDF'}</span>
-              </button>
-              <button
-                onClick={handleDownloadReport}
-                className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                <span className="hidden sm:inline">Scarica MD</span>
+                <span className="hidden sm:inline">{generatingPdf ? 'Generando...' : 'PDF'}</span>
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Home className="w-5 h-5" />
-                <span className="hidden sm:inline">Dashboard</span>
               </button>
             </div>
           </div>
@@ -361,33 +439,51 @@ ${reportData.report}
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-white rounded-xl p-1 shadow-sm">
+        <div className="flex flex-wrap gap-2 mb-6 bg-white rounded-xl p-1 shadow-sm">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'overview' ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <BarChart3 className="w-5 h-5" />
-            Panoramica
+            <span className="hidden sm:inline">Panoramica</span>
           </button>
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'details' ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <TrendingUp className="w-5 h-5" />
-            Gap Analysis
+            <span className="hidden sm:inline">Gap Analysis</span>
           </button>
           <button
             onClick={() => setActiveTab('report')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
               activeTab === 'report' ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Download className="w-5 h-5" />
-            Report Completo
+            <FileText className="w-5 h-5" />
+            <span className="hidden sm:inline">Report DIH</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'audit' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <CheckCircle className="w-5 h-5" />
+            <span className="hidden sm:inline">Scheda Audit</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('staff')}
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'staff' ? 'bg-purple-100 text-purple-700' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <AlertTriangle className="w-5 h-5" />
+            <span className="hidden sm:inline">Profili Staff</span>
           </button>
         </div>
 
@@ -527,9 +623,86 @@ ${reportData.report}
 
         {activeTab === 'report' && (
           <div className="bg-white rounded-xl shadow-sm p-8 animate-fade-in">
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleDownloadReport}
+                className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                Scarica Report MD
+              </button>
+            </div>
             <div className="prose prose-lg max-w-none">
               <ReactMarkdown>{reportData.report}</ReactMarkdown>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <div className="bg-white rounded-xl shadow-sm p-8 animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Scheda di Audit</h2>
+                <p className="text-sm text-gray-500">Documento per rendicontazione UE - Rome DIH</p>
+              </div>
+              <button
+                onClick={handleDownloadAuditSheet}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                Scarica Scheda Audit
+              </button>
+            </div>
+            {reportData.audit_sheet ? (
+              <div className="prose prose-lg max-w-none">
+                <ReactMarkdown>{reportData.audit_sheet}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Scheda di Audit non disponibile per questo assessment.</p>
+                <p className="text-sm mt-2">La scheda viene generata automaticamente per i nuovi assessment.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'staff' && (
+          <div className="animate-fade-in space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Profili del Personale DIH</h2>
+                <p className="text-sm text-gray-500">Schede profilo per rendicontazione costi personale</p>
+              </div>
+              <button
+                onClick={handleDownloadStaffProfiles}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                Scarica Profili Staff
+              </button>
+            </div>
+            
+            {staffProfiles ? (
+              <>
+                <div className="bg-white rounded-xl shadow-sm p-8 border-l-4 border-blue-500">
+                  <div className="prose prose-lg max-w-none">
+                    <ReactMarkdown>{staffProfiles.digital_transformation_expert}</ReactMarkdown>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-xl shadow-sm p-8 border-l-4 border-purple-500">
+                  <div className="prose prose-lg max-w-none">
+                    <ReactMarkdown>{staffProfiles.process_innovation_analyst}</ReactMarkdown>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm p-12 text-center text-gray-500">
+                <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Profili del personale non disponibili.</p>
+              </div>
+            )}
           </div>
         )}
       </main>

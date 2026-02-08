@@ -14,7 +14,8 @@ import {
   Key,
   X,
   Loader2,
-  Trash2
+  Trash2,
+  Package
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import html2canvas from 'html2canvas';
@@ -65,8 +66,14 @@ interface AssessmentDetail {
   scores: Record<string, number>;
   gap_analysis: Record<string, any>;
   report: string;
+  audit_sheet?: string;
   created_at: string | null;
   completed_at: string | null;
+}
+
+interface StaffProfiles {
+  digital_transformation_expert: string;
+  process_innovation_analyst: string;
 }
 
 const AdminPage: React.FC = () => {
@@ -83,6 +90,8 @@ const AdminPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [staffProfiles, setStaffProfiles] = useState<StaffProfiles | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = async () => {
@@ -143,11 +152,20 @@ const AdminPage: React.FC = () => {
   const viewAssessmentDetail = async (assessmentId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/admin/assessments/${assessmentId}?admin_key=${adminKey}`);
-      if (response.ok) {
-        const data = await response.json();
+      const [assessmentResponse, profilesResponse] = await Promise.all([
+        fetch(`${API_BASE}/admin/assessments/${assessmentId}?admin_key=${adminKey}`),
+        fetch(`${API_BASE}/assessments/staff-profiles`)
+      ]);
+      
+      if (assessmentResponse.ok) {
+        const data = await assessmentResponse.json();
         setSelectedAssessment(data);
         setViewMode('detail');
+      }
+      
+      if (profilesResponse.ok) {
+        const profilesData = await profilesResponse.json();
+        setStaffProfiles(profilesData.profiles);
       }
     } catch (err) {
       console.error('Error loading assessment:', err);
@@ -193,6 +211,95 @@ const AdminPage: React.FC = () => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `report-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAuditSheet = () => {
+    if (!selectedAssessment?.audit_sheet) return;
+    const blob = new Blob([selectedAssessment.audit_sheet], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scheda-audit-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const regenerateReport = async () => {
+    if (!selectedAssessment) return;
+    
+    setRegenerating(true);
+    try {
+      const response = await fetch(
+        `${API_BASE}/admin/assessments/${selectedAssessment.id}/regenerate?admin_key=${adminKey}`,
+        { method: 'POST' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Report rigenerato con successo!\nLivello maturità: ${data.maturity_level}\nScheda Audit: ${data.has_audit_sheet ? 'Sì' : 'No'}`);
+        viewAssessmentDetail(selectedAssessment.id);
+      } else {
+        const errorData = await response.json();
+        alert(`Errore: ${errorData.detail || 'Impossibile rigenerare il report'}`);
+      }
+    } catch (err) {
+      console.error('Error regenerating report:', err);
+      alert('Errore di connessione durante la rigenerazione');
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  const downloadFullDocumentation = () => {
+    if (!selectedAssessment || !staffProfiles) return;
+    
+    const fullDoc = `# DOCUMENTAZIONE COMPLETA - DIGITAL MATURITY ASSESSMENT
+
+## Rome Digital Innovation Hub
+
+**Beneficiario:** ${selectedAssessment.organization?.name || 'N/A'}
+**Tipologia:** ${selectedAssessment.organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa'}
+**Data:** ${selectedAssessment.completed_at ? new Date(selectedAssessment.completed_at).toLocaleDateString('it-IT') : 'N/A'}
+
+---
+
+# PARTE 1: REPORT DI MATURITÀ DIGITALE
+
+${selectedAssessment.report}
+
+---
+
+# PARTE 2: SCHEDA DI AUDIT
+
+${selectedAssessment.audit_sheet || 'Non disponibile'}
+
+---
+
+# PARTE 3: PROFILI DEL PERSONALE
+
+${staffProfiles.digital_transformation_expert}
+
+---
+
+${staffProfiles.process_innovation_analyst}
+
+---
+
+*Documentazione generata nell'ambito del progetto DIH - Digital Maturity Assessment*
+*Data generazione: ${new Date().toLocaleDateString('it-IT')}*
+`;
+    
+    const blob = new Blob([fullDoc], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `documentazione-dih-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -336,25 +443,55 @@ const AdminPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={regenerateReport}
+                  disabled={regenerating}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                  title="Rigenera report con nuovo template DIH"
+                >
+                  {regenerating ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <BarChart3 className="w-5 h-5" />
+                  )}
+                  <span className="hidden lg:inline">{regenerating ? 'Rigenerando...' : 'Rigenera Report'}</span>
+                </button>
+                <button
+                  onClick={downloadFullDocumentation}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  title="Scarica tutta la documentazione DIH"
+                >
+                  <Package className="w-5 h-5" />
+                  <span className="hidden lg:inline">Doc. DIH</span>
+                </button>
+                <button
+                  onClick={downloadAuditSheet}
+                  disabled={!selectedAssessment.audit_sheet}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  title="Scarica Scheda Audit"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="hidden lg:inline">Audit</span>
+                </button>
                 <button
                   onClick={downloadPdf}
                   disabled={generatingPdf}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {generatingPdf ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <FileText className="w-5 h-5" />
                   )}
-                  {generatingPdf ? 'Generazione...' : 'Scarica PDF'}
+                  <span className="hidden sm:inline">PDF</span>
                 </button>
                 <button
                   onClick={downloadReport}
                   className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 >
                   <Download className="w-5 h-5" />
-                  Scarica MD
+                  <span className="hidden sm:inline">MD</span>
                 </button>
               </div>
             </div>

@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Assessment, Question, Organization
 from app.schemas import AssessmentSubmit, AssessmentResponse, AssessmentSummary
 from app.auth import get_current_organization
-from app.crew_agents import run_crew_analysis
+from app.crew_agents import run_crew_analysis, get_staff_profiles
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
@@ -198,6 +198,7 @@ async def submit_assessment(
     assessment.gap_analysis = analysis_result.get("gap_analysis", {})
     assessment.maturity_level = analysis_result.get("overall_maturity", 0)
     assessment.report = analysis_result.get("report", "")
+    assessment.audit_sheet = analysis_result.get("audit_sheet", "")
     assessment.status = "completed"
     assessment.completed_at = datetime.utcnow()
     
@@ -262,7 +263,110 @@ async def get_report(
     
     return {
         "report": assessment.report,
+        "audit_sheet": assessment.audit_sheet,
         "scores": assessment.scores,
         "maturity_level": assessment.maturity_level,
         "gap_analysis": assessment.gap_analysis
+    }
+
+@router.get("/{assessment_id}/audit-sheet")
+async def get_audit_sheet(
+    assessment_id: int,
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    """Restituisce la Scheda di Audit per rendicontazione UE"""
+    result = await db.execute(
+        select(Assessment)
+        .where(
+            Assessment.id == assessment_id,
+            Assessment.organization_id == organization.id
+        )
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    if assessment.status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Assessment non ancora completato"
+        )
+    
+    if not assessment.audit_sheet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scheda di Audit non disponibile per questo assessment"
+        )
+    
+    return {
+        "audit_sheet": assessment.audit_sheet,
+        "organization_name": organization.name,
+        "organization_type": organization.type,
+        "maturity_level": assessment.maturity_level,
+        "completed_at": assessment.completed_at
+    }
+
+@router.get("/staff-profiles")
+async def get_staff_profiles_endpoint():
+    """Restituisce le schede profilo del personale DIH per rendicontazione UE"""
+    profiles = get_staff_profiles()
+    return {
+        "profiles": profiles,
+        "description": "Schede profilo del personale coinvolto nel programma Digital Maturity Assessment - Rome DIH"
+    }
+
+@router.get("/{assessment_id}/full-documentation")
+async def get_full_documentation(
+    assessment_id: int,
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    """Restituisce la documentazione completa per rendicontazione UE: report, scheda audit e profili staff"""
+    result = await db.execute(
+        select(Assessment)
+        .where(
+            Assessment.id == assessment_id,
+            Assessment.organization_id == organization.id
+        )
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    if assessment.status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Assessment non ancora completato"
+        )
+    
+    staff_profiles = get_staff_profiles()
+    
+    return {
+        "organization": {
+            "name": organization.name,
+            "type": organization.type,
+            "sector": organization.sector,
+            "size": organization.size
+        },
+        "assessment": {
+            "id": assessment.id,
+            "maturity_level": assessment.maturity_level,
+            "scores": assessment.scores,
+            "gap_analysis": assessment.gap_analysis,
+            "completed_at": assessment.completed_at
+        },
+        "documents": {
+            "report": assessment.report,
+            "audit_sheet": assessment.audit_sheet,
+            "staff_profiles": staff_profiles
+        }
     }
