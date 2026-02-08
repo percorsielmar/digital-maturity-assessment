@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import List
 import os
 import httpx
 
@@ -10,7 +11,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 class AssistantRequest(BaseModel):
     question_text: str
     question_hint: str = ""
-    options: list[str] = []
+    options: List[str] = []
     user_message: str
     organization_type: str = "azienda"
     organization_sector: str = ""

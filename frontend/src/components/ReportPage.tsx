@@ -221,12 +221,16 @@ ${staffProfiles.process_innovation_analyst}
       // Header
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'AUDIT DI MATURITÀ DIGITALE', bold: true, size: 36, color: '003366' })],
+          children: [new TextRun({ text: 'AUDIT DI MATURITÀ DIGITALE', bold: true, size: 36, color: '003366', font: 'Courier New' })],
           heading: HeadingLevel.TITLE,
           alignment: AlignmentType.CENTER,
         }),
         new Paragraph({
-          children: [new TextRun({ text: 'Rome Digital Innovation Hub', size: 24, color: '666666' })],
+          children: [new TextRun({ text: 'Rome Digital Innovation Hub', size: 24, color: '666666', font: 'Courier New' })],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: 'in collaborazione con Il Borgo Urbano', size: 22, color: '666666', font: 'Courier New' })],
           alignment: AlignmentType.CENTER,
         }),
         new Paragraph({ text: '' })
@@ -235,25 +239,24 @@ ${staffProfiles.process_innovation_analyst}
       // Organization info
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'DATI ORGANIZZAZIONE', bold: true, size: 28 })],
+          children: [new TextRun({ text: 'DATI ORGANIZZAZIONE', bold: true, size: 28, font: 'Courier New' })],
           heading: HeadingLevel.HEADING_1,
         }),
-        new Paragraph({ children: [new TextRun({ text: `Beneficiario: `, bold: true }), new TextRun({ text: organization?.name || '-' })] }),
-        new Paragraph({ children: [new TextRun({ text: `Tipologia: `, bold: true }), new TextRun({ text: organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa' })] }),
-        new Paragraph({ children: [new TextRun({ text: `Settore: `, bold: true }), new TextRun({ text: organization?.sector || '-' })] }),
-        new Paragraph({ children: [new TextRun({ text: `Dimensione: `, bold: true }), new TextRun({ text: organization?.size || '-' })] }),
-        new Paragraph({ children: [new TextRun({ text: `Data: `, bold: true }), new TextRun({ text: new Date().toLocaleDateString('it-IT') })] }),
+        new Paragraph({ children: [new TextRun({ text: `Beneficiario: `, bold: true, font: 'Courier New' }), new TextRun({ text: organization?.name || '-', font: 'Courier New' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Tipologia: `, bold: true, font: 'Courier New' }), new TextRun({ text: organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa', font: 'Courier New' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Settore: `, bold: true, font: 'Courier New' }), new TextRun({ text: organization?.sector || '-', font: 'Courier New' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Dimensione: `, bold: true, font: 'Courier New' }), new TextRun({ text: organization?.size || '-', font: 'Courier New' })] }),
         new Paragraph({ text: '' })
       );
       
       // Maturity level
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'LIVELLO DI MATURITÀ DIGITALE', bold: true, size: 28, color: '003366' })],
+          children: [new TextRun({ text: 'LIVELLO DI MATURITÀ DIGITALE', bold: true, size: 28, color: '003366', font: 'Courier New' })],
           heading: HeadingLevel.HEADING_1,
         }),
         new Paragraph({
-          children: [new TextRun({ text: `Punteggio: ${reportData.maturity_level?.toFixed(1) || 'N/A'} / 5`, bold: true, size: 32 })],
+          children: [new TextRun({ text: `Punteggio: ${reportData.maturity_level?.toFixed(1) || 'N/A'} / 5`, bold: true, size: 32, font: 'Courier New' })],
         }),
         new Paragraph({ text: '' })
       );
@@ -262,7 +265,7 @@ ${staffProfiles.process_innovation_analyst}
       if (reportData.scores && Object.keys(reportData.scores).length > 0) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: 'PUNTEGGI PER AREA', bold: true, size: 28, color: '003366' })],
+            children: [new TextRun({ text: 'PUNTEGGI PER AREA', bold: true, size: 28, color: '003366', font: 'Courier New' })],
             heading: HeadingLevel.HEADING_1,
           })
         );
@@ -272,9 +275,9 @@ ${staffProfiles.process_innovation_analyst}
           children.push(
             new Paragraph({
               children: [
-                new TextRun({ text: `• ${category}: ` }),
-                new TextRun({ text: `${score.toFixed(1)}/5`, bold: true }),
-                new TextRun({ text: priority ? ` (Priorità: ${priority})` : '' }),
+                new TextRun({ text: `• ${category}: `, font: 'Courier New' }),
+                new TextRun({ text: `${score.toFixed(1)}/5`, bold: true, font: 'Courier New' }),
+                new TextRun({ text: priority ? ` (Priorità: ${priority})` : '', font: 'Courier New' }),
               ],
             })
           );
@@ -286,7 +289,7 @@ ${staffProfiles.process_innovation_analyst}
       if (reportData.report) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: 'REPORT COMPLETO', bold: true, size: 28, color: '003366' })],
+            children: [new TextRun({ text: 'REPORT COMPLETO', bold: true, size: 28, color: '003366', font: 'Courier New' })],
             heading: HeadingLevel.HEADING_1,
           })
         );
@@ -298,33 +301,33 @@ ${staffProfiles.process_innovation_analyst}
             children.push(new Paragraph({ text: '' }));
           } else if (trimmed.startsWith('# ')) {
             children.push(new Paragraph({
-              children: [new TextRun({ text: trimmed.replace('# ', ''), bold: true, size: 28, color: '003366' })],
+              children: [new TextRun({ text: trimmed.replace('# ', ''), bold: true, size: 28, color: '003366', font: 'Courier New' })],
               heading: HeadingLevel.HEADING_1,
             }));
           } else if (trimmed.startsWith('## ')) {
             children.push(new Paragraph({
-              children: [new TextRun({ text: trimmed.replace('## ', ''), bold: true, size: 24 })],
+              children: [new TextRun({ text: trimmed.replace('## ', ''), bold: true, size: 24, font: 'Courier New' })],
               heading: HeadingLevel.HEADING_2,
             }));
           } else if (trimmed.startsWith('### ')) {
             children.push(new Paragraph({
-              children: [new TextRun({ text: trimmed.replace('### ', ''), bold: true, size: 22 })],
+              children: [new TextRun({ text: trimmed.replace('### ', ''), bold: true, size: 22, font: 'Courier New' })],
               heading: HeadingLevel.HEADING_3,
             }));
           } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
             children.push(new Paragraph({
-              children: [new TextRun({ text: `• ${trimmed.substring(2)}` })],
+              children: [new TextRun({ text: `• ${trimmed.substring(2)}`, font: 'Courier New' })],
             }));
           } else if (trimmed.startsWith('> ')) {
             children.push(new Paragraph({
-              children: [new TextRun({ text: trimmed.substring(2), italics: true, color: '666666' })],
+              children: [new TextRun({ text: trimmed.substring(2), italics: true, color: '666666', font: 'Courier New' })],
             }));
           } else if (!trimmed.startsWith('|') && trimmed !== '---') {
             const cleanText = trimmed
               .replace(/\*\*(.*?)\*\*/g, '$1')
               .replace(/\*(.*?)\*/g, '$1')
               .replace(/`(.*?)`/g, '$1');
-            children.push(new Paragraph({ text: cleanText }));
+            children.push(new Paragraph({ children: [new TextRun({ text: cleanText, font: 'Courier New' })] }));
           }
         }
       }
@@ -333,17 +336,22 @@ ${staffProfiles.process_innovation_analyst}
       children.push(
         new Paragraph({ text: '' }),
         new Paragraph({
-          children: [new TextRun({ text: 'Rome Digital Innovation Hub - Programma di Trasformazione Digitale', size: 18, color: '999999' })],
-          alignment: AlignmentType.CENTER,
-        }),
-        new Paragraph({
-          children: [new TextRun({ text: `Documento generato il ${new Date().toLocaleDateString('it-IT')}`, size: 18, color: '999999' })],
+          children: [new TextRun({ text: 'Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano', size: 18, color: '999999', font: 'Courier New' })],
           alignment: AlignmentType.CENTER,
         })
       );
       
       const doc = new Document({
         sections: [{ children }],
+        styles: {
+          default: {
+            document: {
+              run: {
+                font: 'Courier New',
+              },
+            },
+          },
+        },
       });
       
       const blob = await Packer.toBlob(doc);

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import timedelta
 from pydantic import BaseModel
+from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
@@ -173,11 +174,11 @@ async def google_login(
         )
 
 class OrganizationUpdate(BaseModel):
-    fiscal_code: str | None = None
-    phone: str | None = None
-    admin_name: str | None = None
-    sector: str | None = None
-    size: str | None = None
+    fiscal_code: Optional[str] = None
+    phone: Optional[str] = None
+    admin_name: Optional[str] = None
+    sector: Optional[str] = None
+    size: Optional[str] = None
 
 @router.put("/organization", response_model=OrganizationResponse)
 async def update_organization(

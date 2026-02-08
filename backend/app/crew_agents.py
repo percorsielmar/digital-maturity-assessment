@@ -178,6 +178,7 @@ def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
     report = f"""# AUDIT DI MATURITÀ DIGITALE
 
 ## Rome Digital Innovation Hub
+### in collaborazione con Il Borgo Urbano
 ### Programma di Trasformazione Digitale
 
 ---
@@ -186,8 +187,6 @@ def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
 **Tipologia:** {org_type_label}  
 **Settore:** {sector}  
 **Dimensione:** {size}  
-**Data Assessment:** {current_date}
-
 ---
 
 ## 1. EXECUTIVE SUMMARY ISTITUZIONALE
@@ -209,7 +208,7 @@ Il presente audit rientra nel programma di Digital Maturity Assessment erogato d
 
 {maturity_interpretation}
 
-> {institutional_phrase}
+{institutional_phrase}
 
 ---
 
@@ -430,15 +429,10 @@ Questo documento abilita:
 
 ---
 
-**Rome Digital Innovation Hub**  
+**Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**  
 *Programma di Trasformazione Digitale*
 
-> {institutional_phrase}
-
----
-
-*Documento generato nell'ambito del progetto DIH – Digital Maturity Assessment*  
-*Data: {current_date}*
+{institutional_phrase}
 """
     
     return report
@@ -511,7 +505,7 @@ def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict) -> s
 |-------|--------|
 | **Beneficiario** | {org_name} |
 | **Tipologia** | {org_type_label} |
-| **Ambito** | Rome Digital Innovation Hub |
+| **Ambito** | Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano |
 | **Periodo di svolgimento** | {current_month} |
 
 ---
@@ -559,11 +553,11 @@ L'assessment è stato condotto in coerenza con gli obiettivi del programma DIH e
 
 L'assessment fornisce al beneficiario una fotografia oggettiva e misurabile del proprio livello di maturità digitale, identificando con chiarezza le aree di forza e i gap da colmare. La roadmap strategica consente di pianificare interventi mirati, ottimizzare gli investimenti in digitalizzazione e accedere a opportunità di finanziamento per la trasformazione digitale.
 
-> {institutional_phrase}
+{institutional_phrase}
 
 ---
 
-**Rome Digital Innovation Hub** | Data: {current_date}
+**Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**
 """
     
     return sheet
