@@ -11,7 +11,8 @@ import {
   FileText
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 import { 
   RadarChart, 
   PolarGrid, 
@@ -57,7 +58,7 @@ const ReportPage: React.FC = () => {
   const [staffProfiles, setStaffProfiles] = useState<StaffProfiles | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'report' | 'audit' | 'staff'>('overview');
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingDoc, setGeneratingDoc] = useState(false);
   const [autoDownloadTriggered, setAutoDownloadTriggered] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -66,10 +67,10 @@ const ReportPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (searchParams.get('download') === 'pdf' && reportData && !loading && !autoDownloadTriggered) {
+    if (searchParams.get('download') === 'docx' && reportData && !loading && !autoDownloadTriggered) {
       setAutoDownloadTriggered(true);
       setTimeout(() => {
-        handleDownloadPdf();
+        handleDownloadDocx();
       }, 500);
     }
   }, [searchParams, reportData, loading, autoDownloadTriggered]);
@@ -210,136 +211,147 @@ ${staffProfiles.process_innovation_analyst}
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadDocx = async () => {
     if (!reportData) return;
     
-    setGeneratingPdf(true);
+    setGeneratingDoc(true);
     try {
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
-      const maxWidth = pageWidth - margin * 2;
-      let y = margin;
-      
-      const addText = (text: string, fontSize: number, isBold: boolean = false, color: [number, number, number] = [0, 0, 0]) => {
-        pdf.setFontSize(fontSize);
-        pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
-        pdf.setTextColor(color[0], color[1], color[2]);
-        
-        const lines = pdf.splitTextToSize(text, maxWidth);
-        const lineHeight = fontSize * 0.4;
-        
-        for (const line of lines) {
-          if (y + lineHeight > pageHeight - margin) {
-            pdf.addPage();
-            y = margin;
-          }
-          pdf.text(line, margin, y);
-          y += lineHeight;
-        }
-      };
-      
-      const addSpace = (space: number) => {
-        y += space;
-        if (y > pageHeight - margin) {
-          pdf.addPage();
-          y = margin;
-        }
-      };
+      const children: Paragraph[] = [];
       
       // Header
-      addText('AUDIT DI MATURITÀ DIGITALE', 18, true, [0, 51, 102]);
-      addSpace(3);
-      addText('Rome Digital Innovation Hub', 12, false, [100, 100, 100]);
-      addSpace(8);
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'AUDIT DI MATURITÀ DIGITALE', bold: true, size: 36, color: '003366' })],
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: 'Rome Digital Innovation Hub', size: 24, color: '666666' })],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({ text: '' })
+      );
       
       // Organization info
-      addText('DATI ORGANIZZAZIONE', 12, true);
-      addSpace(2);
-      addText(`Beneficiario: ${organization?.name || '-'}`, 10, false);
-      addText(`Tipologia: ${organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa'}`, 10, false);
-      addText(`Settore: ${organization?.sector || '-'}`, 10, false);
-      addText(`Dimensione: ${organization?.size || '-'}`, 10, false);
-      addText(`Data: ${new Date().toLocaleDateString('it-IT')}`, 10, false);
-      addSpace(6);
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'DATI ORGANIZZAZIONE', bold: true, size: 28 })],
+          heading: HeadingLevel.HEADING_1,
+        }),
+        new Paragraph({ children: [new TextRun({ text: `Beneficiario: `, bold: true }), new TextRun({ text: organization?.name || '-' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Tipologia: `, bold: true }), new TextRun({ text: organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Settore: `, bold: true }), new TextRun({ text: organization?.sector || '-' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Dimensione: `, bold: true }), new TextRun({ text: organization?.size || '-' })] }),
+        new Paragraph({ children: [new TextRun({ text: `Data: `, bold: true }), new TextRun({ text: new Date().toLocaleDateString('it-IT') })] }),
+        new Paragraph({ text: '' })
+      );
       
       // Maturity level
-      addText('LIVELLO DI MATURITÀ DIGITALE', 12, true, [0, 51, 102]);
-      addSpace(2);
-      addText(`Punteggio: ${reportData.maturity_level?.toFixed(1) || 'N/A'} / 5`, 14, true);
-      addSpace(6);
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'LIVELLO DI MATURITÀ DIGITALE', bold: true, size: 28, color: '003366' })],
+          heading: HeadingLevel.HEADING_1,
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: `Punteggio: ${reportData.maturity_level?.toFixed(1) || 'N/A'} / 5`, bold: true, size: 32 })],
+        }),
+        new Paragraph({ text: '' })
+      );
       
       // Scores
       if (reportData.scores && Object.keys(reportData.scores).length > 0) {
-        addText('PUNTEGGI PER AREA', 12, true, [0, 51, 102]);
-        addSpace(2);
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: 'PUNTEGGI PER AREA', bold: true, size: 28, color: '003366' })],
+            heading: HeadingLevel.HEADING_1,
+          })
+        );
         for (const [category, score] of Object.entries(reportData.scores)) {
           const gap = reportData.gap_analysis?.[category];
           const priority = gap?.priority || '';
-          addText(`• ${category}: ${score.toFixed(1)}/5 ${priority ? `(Priorità: ${priority})` : ''}`, 10, false);
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `• ${category}: ` }),
+                new TextRun({ text: `${score.toFixed(1)}/5`, bold: true }),
+                new TextRun({ text: priority ? ` (Priorità: ${priority})` : '' }),
+              ],
+            })
+          );
         }
-        addSpace(6);
+        children.push(new Paragraph({ text: '' }));
       }
       
-      // Report content (simplified markdown parsing)
+      // Report content
       if (reportData.report) {
-        addText('REPORT COMPLETO', 12, true, [0, 51, 102]);
-        addSpace(4);
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: 'REPORT COMPLETO', bold: true, size: 28, color: '003366' })],
+            heading: HeadingLevel.HEADING_1,
+          })
+        );
         
         const lines = reportData.report.split('\n');
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed) {
-            addSpace(2);
+            children.push(new Paragraph({ text: '' }));
           } else if (trimmed.startsWith('# ')) {
-            addSpace(4);
-            addText(trimmed.replace('# ', ''), 14, true, [0, 51, 102]);
-            addSpace(2);
+            children.push(new Paragraph({
+              children: [new TextRun({ text: trimmed.replace('# ', ''), bold: true, size: 28, color: '003366' })],
+              heading: HeadingLevel.HEADING_1,
+            }));
           } else if (trimmed.startsWith('## ')) {
-            addSpace(3);
-            addText(trimmed.replace('## ', ''), 12, true, [51, 51, 51]);
-            addSpace(2);
+            children.push(new Paragraph({
+              children: [new TextRun({ text: trimmed.replace('## ', ''), bold: true, size: 24 })],
+              heading: HeadingLevel.HEADING_2,
+            }));
           } else if (trimmed.startsWith('### ')) {
-            addSpace(2);
-            addText(trimmed.replace('### ', ''), 11, true);
-            addSpace(1);
+            children.push(new Paragraph({
+              children: [new TextRun({ text: trimmed.replace('### ', ''), bold: true, size: 22 })],
+              heading: HeadingLevel.HEADING_3,
+            }));
           } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-            addText(`  • ${trimmed.substring(2)}`, 10, false);
+            children.push(new Paragraph({
+              children: [new TextRun({ text: `• ${trimmed.substring(2)}` })],
+            }));
           } else if (trimmed.startsWith('> ')) {
-            pdf.setTextColor(100, 100, 100);
-            addText(`  ${trimmed.substring(2)}`, 10, false);
-            pdf.setTextColor(0, 0, 0);
-          } else if (trimmed.startsWith('|')) {
-            // Skip markdown tables
-          } else if (trimmed === '---') {
-            addSpace(3);
-          } else {
-            // Clean markdown formatting
+            children.push(new Paragraph({
+              children: [new TextRun({ text: trimmed.substring(2), italics: true, color: '666666' })],
+            }));
+          } else if (!trimmed.startsWith('|') && trimmed !== '---') {
             const cleanText = trimmed
               .replace(/\*\*(.*?)\*\*/g, '$1')
               .replace(/\*(.*?)\*/g, '$1')
               .replace(/`(.*?)`/g, '$1');
-            addText(cleanText, 10, false);
+            children.push(new Paragraph({ text: cleanText }));
           }
         }
       }
       
       // Footer
-      addSpace(10);
-      addText('Rome Digital Innovation Hub - Programma di Trasformazione Digitale', 8, false, [100, 100, 100]);
-      addText(`Documento generato il ${new Date().toLocaleDateString('it-IT')}`, 8, false, [100, 100, 100]);
+      children.push(
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [new TextRun({ text: 'Rome Digital Innovation Hub - Programma di Trasformazione Digitale', size: 18, color: '999999' })],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: `Documento generato il ${new Date().toLocaleDateString('it-IT')}`, size: 18, color: '999999' })],
+          alignment: AlignmentType.CENTER,
+        })
+      );
       
-      pdf.save(`report-dih-${organization?.name || 'assessment'}-${id}.pdf`);
+      const doc = new Document({
+        sections: [{ children }],
+      });
+      
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `report-dih-${organization?.name || 'assessment'}-${id}.docx`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error generating DOCX:', error);
     } finally {
-      setGeneratingPdf(false);
+      setGeneratingDoc(false);
     }
   };
 
@@ -411,16 +423,16 @@ ${staffProfiles.process_innovation_analyst}
                 <span className="hidden lg:inline">Documentazione DIH</span>
               </button>
               <button
-                onClick={handleDownloadPdf}
-                disabled={generatingPdf}
+                onClick={handleDownloadDocx}
+                disabled={generatingDoc}
                 className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50"
               >
-                {generatingPdf ? (
+                {generatingDoc ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <FileText className="w-5 h-5" />
                 )}
-                <span className="hidden sm:inline">{generatingPdf ? 'Generando...' : 'PDF'}</span>
+                <span className="hidden sm:inline">{generatingDoc ? 'Generando...' : 'DOCX'}</span>
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
