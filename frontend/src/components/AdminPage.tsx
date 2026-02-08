@@ -18,7 +18,6 @@ import {
   Package
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -307,61 +306,131 @@ ${staffProfiles.process_innovation_analyst}
   };
 
   const downloadPdf = async () => {
-    if (!reportRef.current || !selectedAssessment) return;
+    if (!selectedAssessment) return;
     
     setGeneratingPdf(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#f9fafb'
-      } as any);
-      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const maxWidth = pageWidth - margin * 2;
+      let y = margin;
       
-      // Scale image to fit page width with margins
-      const margin = 10;
-      const availableWidth = pdfWidth - (margin * 2);
-      const ratio = availableWidth / imgWidth;
-      const scaledHeight = imgHeight * ratio;
+      const addText = (text: string, fontSize: number, isBold: boolean = false, color: [number, number, number] = [0, 0, 0]) => {
+        pdf.setFontSize(fontSize);
+        pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+        pdf.setTextColor(color[0], color[1], color[2]);
+        
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        const lineHeight = fontSize * 0.4;
+        
+        for (const line of lines) {
+          if (y + lineHeight > pageHeight - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          pdf.text(line, margin, y);
+          y += lineHeight;
+        }
+      };
       
-      let heightLeft = scaledHeight;
-      let page = 0;
-      
-      while (heightLeft > 0) {
-        if (page > 0) {
+      const addSpace = (space: number) => {
+        y += space;
+        if (y > pageHeight - margin) {
           pdf.addPage();
+          y = margin;
         }
-        
-        // Calculate how much of the image to show on this page
-        const sourceY = page * (pdfHeight - margin * 2) / ratio;
-        const sourceHeight = Math.min((pdfHeight - margin * 2) / ratio, imgHeight - sourceY);
-        
-        // Create a temporary canvas for this page section
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = imgWidth;
-        pageCanvas.height = sourceHeight;
-        const ctx = pageCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
-          const pageImgData = pageCanvas.toDataURL('image/png');
-          pdf.addImage(pageImgData, 'PNG', margin, margin, availableWidth, sourceHeight * ratio);
+      };
+      
+      // Header
+      addText('AUDIT DI MATURITÀ DIGITALE', 18, true, [0, 51, 102]);
+      addSpace(3);
+      addText('Rome Digital Innovation Hub', 12, false, [100, 100, 100]);
+      addSpace(8);
+      
+      // Organization info
+      addText('DATI ORGANIZZAZIONE', 12, true);
+      addSpace(2);
+      addText(`Beneficiario: ${selectedAssessment.organization?.name || '-'}`, 10, false);
+      addText(`Tipologia: ${selectedAssessment.organization?.type === 'pa' ? 'Pubblica Amministrazione' : 'Impresa'}`, 10, false);
+      addText(`Settore: ${selectedAssessment.organization?.sector || '-'}`, 10, false);
+      addText(`Dimensione: ${(selectedAssessment.organization as any)?.size || '-'}`, 10, false);
+      addText(`Data: ${selectedAssessment.completed_at ? new Date(selectedAssessment.completed_at).toLocaleDateString('it-IT') : '-'}`, 10, false);
+      addSpace(6);
+      
+      // Maturity level
+      addText('LIVELLO DI MATURITÀ DIGITALE', 12, true, [0, 51, 102]);
+      addSpace(2);
+      addText(`Punteggio: ${selectedAssessment.maturity_level?.toFixed(1) || 'N/A'} / 5`, 14, true);
+      addSpace(6);
+      
+      // Scores
+      if (selectedAssessment.scores && Object.keys(selectedAssessment.scores).length > 0) {
+        addText('PUNTEGGI PER AREA', 12, true, [0, 51, 102]);
+        addSpace(2);
+        for (const [category, score] of Object.entries(selectedAssessment.scores)) {
+          const gap = selectedAssessment.gap_analysis?.[category];
+          const priority = gap?.priority || '';
+          addText(`• ${category}: ${(score as number).toFixed(1)}/5 ${priority ? `(Priorità: ${priority})` : ''}`, 10, false);
         }
-        
-        heightLeft -= (pdfHeight - margin * 2);
-        page++;
+        addSpace(6);
       }
       
-      pdf.save(`report-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.pdf`);
+      // Report content (simplified markdown parsing)
+      if (selectedAssessment.report) {
+        addText('REPORT COMPLETO', 12, true, [0, 51, 102]);
+        addSpace(4);
+        
+        const lines = selectedAssessment.report.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            addSpace(2);
+          } else if (trimmed.startsWith('# ')) {
+            addSpace(4);
+            addText(trimmed.replace('# ', ''), 14, true, [0, 51, 102]);
+            addSpace(2);
+          } else if (trimmed.startsWith('## ')) {
+            addSpace(3);
+            addText(trimmed.replace('## ', ''), 12, true, [51, 51, 51]);
+            addSpace(2);
+          } else if (trimmed.startsWith('### ')) {
+            addSpace(2);
+            addText(trimmed.replace('### ', ''), 11, true);
+            addSpace(1);
+          } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+            addText(`  • ${trimmed.substring(2)}`, 10, false);
+          } else if (trimmed.startsWith('> ')) {
+            pdf.setTextColor(100, 100, 100);
+            addText(`  ${trimmed.substring(2)}`, 10, false);
+            pdf.setTextColor(0, 0, 0);
+          } else if (trimmed.startsWith('|')) {
+            // Skip markdown tables
+          } else if (trimmed === '---') {
+            addSpace(3);
+          } else {
+            // Clean markdown formatting
+            const cleanText = trimmed
+              .replace(/\*\*(.*?)\*\*/g, '$1')
+              .replace(/\*(.*?)\*/g, '$1')
+              .replace(/`(.*?)`/g, '$1');
+            addText(cleanText, 10, false);
+          }
+        }
+      }
+      
+      // Footer
+      addSpace(10);
+      addText('Rome Digital Innovation Hub - Programma di Trasformazione Digitale', 8, false, [100, 100, 100]);
+      addText(`Documento generato il ${new Date().toLocaleDateString('it-IT')}`, 8, false, [100, 100, 100]);
+      
+      pdf.save(`report-dih-${selectedAssessment.organization?.name || 'assessment'}-${selectedAssessment.id}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
     } finally {
