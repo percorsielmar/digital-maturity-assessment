@@ -9,6 +9,10 @@ from app.questions_data import DIGITAL_MATURITY_QUESTIONS
 from app.routers import auth, questions, assessments, admin, assistant, questions_level2
 
 async def run_migrations():
+    from app.config import get_settings
+    db_url = get_settings().DATABASE_URL
+    is_sqlite = "sqlite" in db_url
+    
     async with engine.begin() as conn:
         migrations = [
             ("organizations", "fiscal_code", "VARCHAR(50)"),
@@ -20,8 +24,14 @@ async def run_migrations():
         ]
         for table, column, col_type in migrations:
             try:
-                result = await conn.execute(text(f"PRAGMA table_info({table})"))
-                columns = [row[1] for row in result.fetchall()]
+                if is_sqlite:
+                    result = await conn.execute(text(f"PRAGMA table_info({table})"))
+                    columns = [row[1] for row in result.fetchall()]
+                else:
+                    result = await conn.execute(text(
+                        f"SELECT column_name FROM information_schema.columns WHERE table_name='{table}'"
+                    ))
+                    columns = [row[0] for row in result.fetchall()]
                 if column not in columns:
                     await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
                     print(f"Migration: added {column} to {table}")
