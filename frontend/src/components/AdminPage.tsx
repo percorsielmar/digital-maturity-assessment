@@ -15,7 +15,9 @@ import {
   X,
   Loader2,
   Trash2,
-  Package
+  Package,
+  ListChecks,
+  Printer
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
@@ -76,6 +78,28 @@ interface StaffProfiles {
   process_innovation_analyst: string;
 }
 
+interface ResponseDetail {
+  question_id: number;
+  category: string;
+  subcategory: string;
+  question_text: string;
+  selected_option_index: number;
+  selected_option_text: string;
+  selected_score: number;
+  notes: string | null;
+  all_options: { text: string; score: number }[];
+}
+
+interface ResponsesData {
+  assessment_id: number;
+  organization: { name: string; type: string };
+  status: string;
+  maturity_level: number | null;
+  completed_at: string | null;
+  total_questions: number;
+  responses: ResponseDetail[];
+}
+
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [adminKey, setAdminKey] = useState('');
@@ -92,6 +116,9 @@ const AdminPage: React.FC = () => {
   const [generatingDoc, setGeneratingDoc] = useState(false);
   const [staffProfiles, setStaffProfiles] = useState<StaffProfiles | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [responsesData, setResponsesData] = useState<ResponsesData | null>(null);
+  const [showResponses, setShowResponses] = useState(false);
+  const [loadingResponses, setLoadingResponses] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = async () => {
@@ -254,6 +281,82 @@ const AdminPage: React.FC = () => {
     } finally {
       setRegenerating(false);
     }
+  };
+
+  const viewResponses = async () => {
+    if (!selectedAssessment) return;
+    setLoadingResponses(true);
+    try {
+      const response = await fetch(
+        `${API_BASE}/admin/assessments/${selectedAssessment.id}/responses?admin_key=${adminKey}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setResponsesData(data);
+        setShowResponses(true);
+      } else {
+        alert('Errore nel caricamento delle risposte');
+      }
+    } catch (err) {
+      console.error('Error loading responses:', err);
+      alert('Errore di connessione');
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
+  const printResponses = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow || !responsesData) return;
+    
+    const grouped: Record<string, ResponseDetail[]> = {};
+    for (const r of responsesData.responses) {
+      if (!grouped[r.category]) grouped[r.category] = [];
+      grouped[r.category].push(r);
+    }
+    
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Risposte Assessment #${responsesData.assessment_id}</title>
+    <style>
+      body { font-family: 'Courier New', monospace; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+      h1 { color: #003366; border-bottom: 2px solid #003366; padding-bottom: 10px; font-size: 18px; }
+      h2 { color: #003366; margin-top: 30px; font-size: 16px; background: #f0f4f8; padding: 8px 12px; border-radius: 4px; }
+      .question { margin: 15px 0; padding: 12px; border-left: 3px solid #ddd; }
+      .question-text { font-weight: bold; margin-bottom: 8px; font-size: 13px; }
+      .option { padding: 4px 8px; margin: 2px 0; font-size: 12px; border-radius: 3px; }
+      .option.selected { background: #e8f5e9; border: 1px solid #4caf50; font-weight: bold; }
+      .option.not-selected { color: #999; }
+      .score-badge { display: inline-block; background: #003366; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px; }
+      .summary { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+      .summary p { margin: 4px 0; font-size: 13px; }
+      @media print { body { padding: 0; } }
+    </style></head><body>`;
+    
+    html += `<h1>RISPOSTE ASSESSMENT #${responsesData.assessment_id}</h1>`;
+    html += `<div class="summary">`;
+    html += `<p><strong>Organizzazione:</strong> ${responsesData.organization.name}</p>`;
+    html += `<p><strong>Livello Maturità:</strong> ${responsesData.maturity_level?.toFixed(1) || 'N/A'} / 5</p>`;
+    html += `<p><strong>Domande totali:</strong> ${responsesData.total_questions}</p>`;
+    if (responsesData.completed_at) html += `<p><strong>Completato:</strong> ${new Date(responsesData.completed_at).toLocaleString('it-IT')}</p>`;
+    html += `</div>`;
+    
+    for (const [category, questions] of Object.entries(grouped)) {
+      html += `<h2>${category}</h2>`;
+      for (const q of questions) {
+        html += `<div class="question">`;
+        html += `<div class="question-text">${q.question_text}</div>`;
+        for (const opt of q.all_options) {
+          const isSelected = opt.text === q.selected_option_text;
+          html += `<div class="option ${isSelected ? 'selected' : 'not-selected'}">`;
+          html += `${isSelected ? '✔' : '○'} ${opt.text} <span class="score-badge">${opt.score}/5</span></div>`;
+        }
+        html += `</div>`;
+      }
+    }
+    
+    html += `</body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const downloadFullDocumentation = () => {
@@ -547,6 +650,19 @@ ${staffProfiles.process_innovation_analyst}
                   <span className="hidden lg:inline">{regenerating ? 'Rigenerando...' : 'Rigenera Report'}</span>
                 </button>
                 <button
+                  onClick={viewResponses}
+                  disabled={loadingResponses}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                  title="Visualizza risposte dettagliate"
+                >
+                  {loadingResponses ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <ListChecks className="w-5 h-5" />
+                  )}
+                  <span className="hidden lg:inline">Risposte</span>
+                </button>
+                <button
                   onClick={downloadFullDocumentation}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                   title="Scarica tutta la documentazione DIH"
@@ -681,6 +797,82 @@ ${staffProfiles.process_innovation_analyst}
             </div>
           )}
         </main>
+
+        {/* Responses Modal */}
+        {showResponses && responsesData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Risposte Assessment #{responsesData.assessment_id}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {responsesData.organization.name} — {responsesData.total_questions} domande
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={printResponses}
+                    className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Stampa
+                  </button>
+                  <button
+                    onClick={() => setShowResponses(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-y-auto p-6">
+                {(() => {
+                  const grouped: Record<string, ResponseDetail[]> = {};
+                  for (const r of responsesData.responses) {
+                    if (!grouped[r.category]) grouped[r.category] = [];
+                    grouped[r.category].push(r);
+                  }
+                  return Object.entries(grouped).map(([category, questions]) => (
+                    <div key={category} className="mb-6">
+                      <h4 className="text-md font-semibold text-white bg-blue-900 px-4 py-2 rounded-lg mb-3">
+                        {category}
+                      </h4>
+                      {questions.map((q) => (
+                        <div key={q.question_id} className="mb-4 p-4 border-l-4 border-gray-200 bg-gray-50 rounded-r-lg">
+                          <p className="font-medium text-gray-800 text-sm mb-2">{q.question_text}</p>
+                          <div className="space-y-1">
+                            {q.all_options.map((opt, idx) => {
+                              const isSelected = opt.text === q.selected_option_text;
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${
+                                    isSelected
+                                      ? 'bg-green-100 border border-green-400 font-semibold text-green-800'
+                                      : 'text-gray-400'
+                                  }`}
+                                >
+                                  <span>{isSelected ? '✔' : '○'} {opt.text}</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                    isSelected ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                                  }`}>
+                                    {opt.score}/5
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

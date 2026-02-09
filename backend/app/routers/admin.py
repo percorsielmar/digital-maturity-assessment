@@ -307,6 +307,81 @@ async def regenerate_assessment_report(
         "has_audit_sheet": bool(assessment.audit_sheet)
     }
 
+@router.get("/assessments/{assessment_id}/responses")
+async def get_assessment_responses(
+    assessment_id: int,
+    admin_key: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Restituisce le risposte dettagliate di un assessment con testo domande e opzioni scelte"""
+    verify_admin_key(admin_key)
+    
+    result = await db.execute(
+        select(Assessment).where(Assessment.id == assessment_id)
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    org_result = await db.execute(
+        select(Organization).where(Organization.id == assessment.organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+    
+    questions_result = await db.execute(select(Question).order_by(Question.order))
+    questions = questions_result.scalars().all()
+    questions_map = {q.id: q for q in questions}
+    
+    raw_responses = assessment.responses or {}
+    answers_list = raw_responses.get("answers", [])
+    if not answers_list and isinstance(raw_responses, list):
+        answers_list = raw_responses
+    
+    detailed_responses = []
+    for answer in answers_list:
+        q_id = answer.get("question_id")
+        selected = answer.get("selected_option")
+        notes = answer.get("notes")
+        
+        question = questions_map.get(q_id)
+        if question:
+            options = question.options or []
+            selected_text = ""
+            selected_score = 0
+            if isinstance(selected, int) and 0 <= selected < len(options):
+                opt = options[selected]
+                selected_text = opt.get("text", "")
+                selected_score = opt.get("score", 0)
+            
+            detailed_responses.append({
+                "question_id": q_id,
+                "category": question.category,
+                "subcategory": question.subcategory,
+                "question_text": question.text,
+                "selected_option_index": selected,
+                "selected_option_text": selected_text,
+                "selected_score": selected_score,
+                "notes": notes,
+                "all_options": [{"text": o.get("text", ""), "score": o.get("score", 0)} for o in options]
+            })
+    
+    return {
+        "assessment_id": assessment.id,
+        "organization": {
+            "name": organization.name if organization else "N/A",
+            "type": organization.type if organization else "N/A",
+        },
+        "status": assessment.status,
+        "maturity_level": assessment.maturity_level,
+        "completed_at": assessment.completed_at.isoformat() if assessment.completed_at else None,
+        "total_questions": len(detailed_responses),
+        "responses": detailed_responses
+    }
+
 @router.get("/staff-profiles")
 async def get_admin_staff_profiles(admin_key: str):
     """Restituisce le schede profilo del personale DIH"""
