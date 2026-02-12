@@ -17,7 +17,9 @@ import {
   Trash2,
   Package,
   ListChecks,
-  Printer
+  Printer,
+  UserCircle,
+  Timer
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
@@ -359,6 +361,58 @@ const AdminPage: React.FC = () => {
     printWindow.print();
   };
 
+  const downloadCVs = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/staff-cvs?admin_key=${adminKey}`);
+      if (response.ok) {
+        const data = await response.json();
+        const cvs = data.cvs;
+        for (const [name, cv] of Object.entries(cvs)) {
+          const blob = new Blob([cv as string], { type: 'text/markdown' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `cv-${name}.md`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      } else {
+        alert('Errore nel caricamento dei CV');
+      }
+    } catch (err) {
+      console.error('Error loading CVs:', err);
+      alert('Errore di connessione');
+    }
+  };
+
+  const downloadTimesheet = async () => {
+    if (!selectedAssessment) return;
+    try {
+      const response = await fetch(
+        `${API_BASE}/admin/assessments/${selectedAssessment.id}/timesheet?admin_key=${adminKey}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const blob = new Blob([data.timesheet], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `foglio-ore-${data.organization_name || 'assessment'}-${data.assessment_id}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        alert('Errore nella generazione del foglio ore');
+      }
+    } catch (err) {
+      console.error('Error loading timesheet:', err);
+      alert('Errore di connessione');
+    }
+  };
+
   const downloadFullDocumentation = () => {
     if (!selectedAssessment || !staffProfiles) return;
     
@@ -661,6 +715,22 @@ ${staffProfiles.process_innovation_analyst}
                     <ListChecks className="w-5 h-5" />
                   )}
                   <span className="hidden lg:inline">Risposte</span>
+                </button>
+                <button
+                  onClick={downloadCVs}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  title="Scarica CV figure professionali"
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span className="hidden lg:inline">CV</span>
+                </button>
+                <button
+                  onClick={downloadTimesheet}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+                  title="Scarica foglio ore assessment"
+                >
+                  <Timer className="w-5 h-5" />
+                  <span className="hidden lg:inline">Ore</span>
                 </button>
                 <button
                   onClick={downloadFullDocumentation}

@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models import Organization, Assessment, Question
 from app.schemas import OrganizationResponse, AssessmentSummary
 from app.auth import get_password_hash
-from app.crew_agents import run_crew_analysis, get_staff_profiles
+from app.crew_agents import run_crew_analysis, get_staff_profiles, get_staff_cvs, generate_timesheet
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -390,4 +390,55 @@ async def get_admin_staff_profiles(admin_key: str):
     return {
         "profiles": profiles,
         "description": "Schede profilo del personale DIH per rendicontazione UE"
+    }
+
+@router.get("/staff-cvs")
+async def get_admin_staff_cvs(admin_key: str):
+    """Restituisce i CV sintetici delle figure chiave come documenti separati"""
+    verify_admin_key(admin_key)
+    cvs = get_staff_cvs()
+    return {
+        "cvs": cvs,
+        "description": "CV sintetici delle figure chiave per rendicontazione"
+    }
+
+@router.get("/assessments/{assessment_id}/timesheet")
+async def get_assessment_timesheet(
+    assessment_id: int,
+    admin_key: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Genera il foglio ore per un assessment specifico"""
+    verify_admin_key(admin_key)
+    
+    result = await db.execute(
+        select(Assessment).where(Assessment.id == assessment_id)
+    )
+    assessment = result.scalar_one_or_none()
+    
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment non trovato"
+        )
+    
+    org_result = await db.execute(
+        select(Organization).where(Organization.id == assessment.organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+    
+    assessment_info = {
+        "id": assessment.id,
+        "completed_at": assessment.completed_at.isoformat() if assessment.completed_at else None
+    }
+    organization_info = {
+        "name": organization.name if organization else "N/A"
+    }
+    
+    timesheet = generate_timesheet(assessment_info, organization_info)
+    
+    return {
+        "assessment_id": assessment.id,
+        "organization_name": organization.name if organization else "N/A",
+        "timesheet": timesheet
     }

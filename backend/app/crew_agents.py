@@ -442,9 +442,21 @@ def get_staff_profiles() -> Dict[str, str]:
     
     digital_expert = """## DIGITAL TRANSFORMATION EXPERT (SENIOR)
 
-**Ruolo nel progetto:** Figura senior responsabile della supervisione metodologica e della qualità degli assessment di maturità digitale. Opera come referente tecnico-strategico per la valutazione delle capacità digitali dei beneficiari.
+**Nome e Cognome:** Alexander Schneider
+**Ruolo:** Esperto in Trasformazione Digitale — Senior AI Engineer & Product Manager
 
-**Principali attività:**
+**Formazione Accademica:**
+- Laurea in Ingegneria — Università degli Studi Roma Tre
+
+**Esperienza Professionale:**
+- Senior AI Engineer & Product Manager presso Deloitte, specializzato in soluzioni GenAI e AI Agents
+- Esperienza consolidata nella progettazione e implementazione di soluzioni di intelligenza artificiale per la trasformazione digitale di imprese e PA
+- Competenze avanzate in architetture AI, machine learning, NLP e sistemi di automazione intelligente
+
+**Ruolo nel progetto DIH:**
+Figura senior responsabile della supervisione metodologica e della qualità degli assessment di maturità digitale. Opera come referente tecnico-strategico per la valutazione delle capacità digitali dei beneficiari.
+
+**Principali attività nel progetto:**
 - Supervisione metodologica del framework di Digital Maturity Assessment
 - Validazione e contestualizzazione dei risultati degli assessment
 - Interpretazione strategica dei profili di maturità digitale
@@ -452,15 +464,36 @@ def get_staff_profiles() -> Dict[str, str]:
 - Elaborazione di raccomandazioni operative allineate a obiettivi UE
 - Revisione e validazione dei report di audit digitale
 
-**Competenze:** Strategia digitale, framework di maturità (CMMI, EFQM), analisi organizzativa, tecnologie digitali, programmi europei, comunicazione istituzionale.
+**Competenze chiave:** Intelligenza artificiale, GenAI, AI Agents, strategia digitale, framework di maturità (CMMI, EFQM), analisi organizzativa, tecnologie digitali avanzate, programmi europei.
 
-**Valore aggiunto:** Qualità dell'analisi, contestualizzazione, visione strategica, credibilità istituzionale, actionability delle raccomandazioni."""
+**Valore aggiunto:** Visione tecnico-strategica di alto livello, competenze AI all'avanguardia, capacità di tradurre innovazione tecnologica in raccomandazioni operative concrete."""
 
     process_analyst = """## PROCESS & INNOVATION ANALYST
 
-**Ruolo nel progetto:** Figura operativa responsabile dell'analisi dettagliata dei dati raccolti e della loro elaborazione in insight strategici. Collabora con il Digital Transformation Expert per trasformare i risultati quantitativi in valutazioni qualitative.
+**Nome e Cognome:** Elmar Schneider
+**Ruolo:** Analista Innovazione di Processo — Innovation Manager & Digital Expert
 
-**Principali attività:**
+**Formazione e Certificazioni:**
+- Innovation Manager — Esperienza pluriennale nella gestione di progetti europei e bandi pubblici
+- Sviluppatore software e sistemi digitali dal 1996
+- Autore del software registrato "DAE-O" (Modulo per la creazione ed ottimizzazione di Deep Autoencoder)
+
+**Esperienza Professionale:**
+- Coordinatore e Presidente di Rete Il Borgo Urbano — partner del Tecnopolo, capoprogetto nell'ATI
+- Manager di Reti di Impresa — promozione attiva della collaborazione tra imprese per azioni win-win
+- Programmatore e sviluppatore web dalla prima ora (dal 1996): sviluppo siti internet (tra cui Malesia.it, Guadalupa.it), applicazioni mobile, e-commerce, sistemi di pagamento online, logistica integrata
+- Competenze complete in ambito digitale: programmazione DOS, HTML, sviluppo web, sistemi informatici, gestione e implementazione reti LAN, blog WordPress, suite Microsoft, Google Cloud, sviluppo con AI
+- Energy Manager — Vicepresidente di una ESCo, ha partecipato alla strutturazione del progetto Officinae Verdi (Unicredit) per la realizzazione degli Audit Energetici CFD di edifici di rilievo tra cui il Grattacielo di Milano, la sede storica di Roma (Via Tupini) e il Palazzo del Banco di Sicilia di Palermo
+- Coordinatore di un team di esperti sulle energie rinnovabili e le comunità energetiche
+- Esperienza consolidata in bandi europei e pubblici: progetti di risparmio energetico, agricoltura sostenibile, Agrisolare, PSR agricoli
+
+**Software Registrato — DAE-O:**
+Modulo per la creazione ed ottimizzazione di Deep Autoencoder (rete neurale). Il software semplifica, ottimizza e automatizza il processo di creazione di un Deep Autoencoder in grado di acquisire e comprimere dati da dataset specifici, trasformandoli in uno spazio latente a dimensionalità ridotta. Sviluppato in Python con ottimizzazione semi-Montecarlo degli iperparametri. Applicazioni: energie rinnovabili (profili pale aerogeneratori), reti elettriche, comunità energetiche, problematiche biologiche, organizzative e finanziarie.
+
+**Ruolo nel progetto DIH:**
+Figura operativa responsabile dell'analisi dettagliata dei dati raccolti e della loro elaborazione in insight strategici. Collabora con il Digital Transformation Expert per trasformare i risultati quantitativi in valutazioni qualitative.
+
+**Principali attività nel progetto:**
 - Analisi e validazione dei dati raccolti tramite piattaforma
 - Elaborazione dei punteggi di maturità per area
 - Identificazione di pattern, gap e aree critiche
@@ -468,14 +501,240 @@ def get_staff_profiles() -> Dict[str, str]:
 - Mappatura dei processi organizzativi del beneficiario
 - Preparazione di materiali di sintesi e visualizzazioni
 
-**Competenze:** Data analysis, process management, innovazione, strumenti di reporting, documentazione tecnica, contesto DIH/UE.
+**Competenze chiave:** Innovation management, data analysis, process management, sviluppo software, AI e reti neurali, energy management, gestione bandi europei, reti di impresa, e-commerce, sistemi digitali integrati.
 
-**Valore aggiunto:** Accuratezza, profondità analitica, supporto operativo, efficienza, qualità documentale."""
+**Valore aggiunto:** Visione trasversale dall'innovazione tecnologica all'efficienza energetica, esperienza trentennale nel digitale, capacità di gestione di progetti complessi e reti collaborative."""
 
     return {
         "digital_transformation_expert": digital_expert,
         "process_innovation_analyst": process_analyst
     }
+
+
+def get_staff_cvs() -> Dict[str, str]:
+    """Restituisce i CV sintetici delle figure chiave per documentazione separata"""
+    
+    cv_alexander = """# CURRICULUM VITAE SINTETICO
+
+## Alexander Schneider
+### Esperto in Trasformazione Digitale
+
+---
+
+**DATI PERSONALI**
+- **Nome e Cognome:** Alexander Schneider
+- **Sede:** Roma
+- **Ruolo attuale:** Senior AI Engineer & Product Manager — Deloitte
+
+---
+
+**FORMAZIONE ACCADEMICA**
+- Laurea in Ingegneria — Università degli Studi Roma Tre, Roma
+
+---
+
+**ESPERIENZA PROFESSIONALE**
+
+**Deloitte** — Senior AI Engineer & Product Manager
+- Progettazione e sviluppo di soluzioni GenAI (Generative AI) e AI Agents
+- Product management di piattaforme di intelligenza artificiale
+- Consulenza strategica per la trasformazione digitale di imprese e PA
+
+---
+
+**COMPETENZE TECNICHE**
+- Intelligenza Artificiale: GenAI, AI Agents, Machine Learning, NLP
+- Architetture software e cloud computing
+- Framework di maturità digitale (CMMI, EFQM)
+- Analisi dati e business intelligence
+- Strategia digitale e innovazione tecnologica
+
+---
+
+**RUOLO NEL PROGETTO DIH**
+Esperto in Trasformazione Digitale (Senior) — Responsabile della supervisione metodologica e della qualità degli assessment di maturità digitale nell'ambito del programma Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano.
+
+---
+
+*Documento redatto ai fini della rendicontazione del progetto DIH — Digital Maturity Assessment*
+"""
+
+    cv_elmar = """# CURRICULUM VITAE SINTETICO
+
+## Elmar Schneider
+### Analista Innovazione di Processo — Innovation Manager
+
+---
+
+**DATI PERSONALI**
+- **Nome e Cognome:** Elmar Schneider
+- **Sede:** Roma
+- **Ruolo attuale:** Coordinatore e Presidente di Rete Il Borgo Urbano
+
+---
+
+**FORMAZIONE E CERTIFICAZIONI**
+- Innovation Manager — Competenze certificate nella gestione di progetti innovativi
+- Sviluppatore software e sistemi digitali dal 1996
+- Energy Manager — Vicepresidente ESCo
+- Autore software registrato "DAE-O" (Deep Autoencoder Optimization)
+
+---
+
+**ESPERIENZA PROFESSIONALE**
+
+**Il Borgo Urbano** — Coordinatore e Presidente di Rete
+- Partner del Tecnopolo, capoprogetto nell'ATI
+- Coordinamento reti di impresa e promozione collaborazione inter-aziendale
+- Gestione progetti europei e bandi pubblici
+
+**Sviluppo Digitale** (dal 1996)
+- Programmazione: DOS, HTML, sviluppo web, applicazioni mobile
+- Siti internet: Malesia.it, Guadalupa.it e altri progetti web
+- E-commerce: sistemi di pagamento online, logistica integrata
+- Sistemi informatici: gestione e implementazione reti LAN
+- CMS e blog: WordPress, suite Microsoft, Google Cloud
+- Sviluppo con AI: progetti di intelligenza artificiale applicata
+
+**Energy Management**
+- Vicepresidente ESCo — gestione efficienza energetica
+- Progetto Officinae Verdi (Unicredit): Audit Energetici CFD
+  - Grattacielo di Milano (sede storica)
+  - Sede Roma — Via Tupini
+  - Palazzo del Banco di Sicilia — Palermo
+- Coordinamento team esperti energie rinnovabili e comunità energetiche
+
+**Bandi e Progetti Pubblici**
+- Progetti europei di innovazione e trasformazione digitale
+- Bandi risparmio energetico e agricoltura sostenibile
+- Agrisolare, PSR agricoli e altri bandi pubblici
+
+---
+
+**SOFTWARE REGISTRATO**
+
+**DAE-O — Deep Autoencoder Optimization**
+Modulo Python per la creazione ed ottimizzazione di Deep Autoencoder (rete neurale). Il software semplifica e automatizza la creazione di reti neurali per la compressione e generazione sintetica di dati. Utilizza ottimizzazione semi-Montecarlo degli iperparametri (layer, nodi, patience) con funzione obiettivo MSE.
+
+Applicazioni: profili pale aerogeneratori, reti elettriche e comunità energetiche, problematiche biologiche, organizzative e finanziarie.
+
+---
+
+**COMPETENZE CHIAVE**
+- Innovation management e gestione progetti complessi
+- Sviluppo software e sistemi digitali (30+ anni)
+- AI e reti neurali (Deep Autoencoder)
+- Energy management e audit energetici
+- E-commerce e pagamenti digitali
+- Gestione bandi europei e pubblici
+- Reti di impresa e collaborazione inter-aziendale
+
+---
+
+**RUOLO NEL PROGETTO DIH**
+Analista Innovazione di Processo — Responsabile dell'analisi dei dati e dell'elaborazione di insight strategici nell'ambito del programma Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano.
+
+---
+
+*Documento redatto ai fini della rendicontazione del progetto DIH — Digital Maturity Assessment*
+"""
+
+    return {
+        "alexander_schneider": cv_alexander,
+        "elmar_schneider": cv_elmar
+    }
+
+
+def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
+    """Genera il foglio ore per un assessment specifico"""
+    from datetime import datetime
+    
+    org_name = organization_info.get("name", "Organizzazione")
+    assessment_id = assessment_info.get("id", "N/A")
+    completed_at = assessment_info.get("completed_at", "")
+    
+    if completed_at:
+        try:
+            dt = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+            date_str = dt.strftime("%d/%m/%Y")
+            month_str = dt.strftime("%B %Y")
+        except Exception:
+            date_str = completed_at
+            month_str = ""
+    else:
+        date_str = datetime.now().strftime("%d/%m/%Y")
+        month_str = datetime.now().strftime("%B %Y")
+    
+    timesheet = f"""# FOGLIO ORE — DIGITAL MATURITY ASSESSMENT
+
+## Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano
+
+---
+
+**Beneficiario:** {org_name}
+**Assessment ID:** #{assessment_id}
+**Periodo di riferimento:** {month_str}
+
+---
+
+## RIEPILOGO ORE PER FIGURA PROFESSIONALE
+
+### 1. Alexander Schneider — Esperto Trasformazione Digitale (Senior)
+
+| Data | Attività | Ore |
+|------|----------|-----|
+| {date_str} | Supervisione metodologica framework assessment | 1.0 |
+| {date_str} | Validazione e contestualizzazione risultati | 1.5 |
+| {date_str} | Interpretazione strategica profilo di maturità | 1.0 |
+| {date_str} | Definizione roadmap di trasformazione | 1.5 |
+| {date_str} | Elaborazione raccomandazioni operative | 1.0 |
+| {date_str} | Revisione e validazione report di audit | 1.0 |
+| | **TOTALE ORE** | **7.0** |
+
+---
+
+### 2. Elmar Schneider — Analista Innovazione di Processo
+
+| Data | Attività | Ore |
+|------|----------|-----|
+| {date_str} | Analisi e validazione dati piattaforma | 1.5 |
+| {date_str} | Elaborazione punteggi di maturità per area | 1.0 |
+| {date_str} | Identificazione pattern, gap e aree critiche | 1.5 |
+| {date_str} | Supporto redazione report di audit | 1.0 |
+| {date_str} | Mappatura processi organizzativi beneficiario | 1.0 |
+| {date_str} | Preparazione materiali di sintesi | 1.0 |
+| | **TOTALE ORE** | **7.0** |
+
+---
+
+## RIEPILOGO COMPLESSIVO
+
+| Figura | Ruolo | Ore Totali |
+|--------|-------|------------|
+| Alexander Schneider | Esperto Trasformazione Digitale | 7.0 |
+| Elmar Schneider | Analista Innovazione di Processo | 7.0 |
+| | **TOTALE PROGETTO** | **14.0** |
+
+---
+
+## NOTE
+
+- Le attività sono state svolte nell'ambito del programma DIH — Digital Maturity Assessment
+- Le ore indicate si riferiscono all'intero ciclo di assessment per il beneficiario {org_name}
+- Il servizio è stato erogato da personale qualificato della SRL incaricata
+- Documentazione di supporto: Report di Maturità Digitale, Scheda di Audit, CV figure professionali
+
+---
+
+**Firma Responsabile Progetto:** ____________________________
+
+**Data:** {date_str}
+
+---
+
+*Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano*
+"""
+    return timesheet
 
 
 def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict) -> str:
