@@ -674,6 +674,7 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 **Beneficiario:** {org_name}
 **Assessment ID:** #{assessment_id}
 **Periodo di riferimento:** {month_str}
+**Tariffa oraria:** 250,00 €/h
 
 ---
 
@@ -683,13 +684,16 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 
 | Data | Attività | Ore |
 |------|----------|-----|
-| {date_str} | Supervisione metodologica framework assessment | 1.0 |
-| {date_str} | Validazione e contestualizzazione risultati | 1.5 |
-| {date_str} | Interpretazione strategica profilo di maturità | 1.0 |
-| {date_str} | Definizione roadmap di trasformazione | 1.5 |
-| {date_str} | Elaborazione raccomandazioni operative | 1.0 |
-| {date_str} | Revisione e validazione report di audit | 1.0 |
-| | **TOTALE ORE** | **7.0** |
+| {date_str} | Analisi preliminare contesto organizzativo del beneficiario | 2.0 |
+| {date_str} | Supervisione metodologica framework di assessment | 2.0 |
+| {date_str} | Validazione e contestualizzazione dei risultati | 3.0 |
+| {date_str} | Interpretazione strategica del profilo di maturità digitale | 2.5 |
+| {date_str} | Definizione roadmap strategica di trasformazione | 3.0 |
+| {date_str} | Elaborazione raccomandazioni operative allineate a obiettivi UE | 2.5 |
+| {date_str} | Revisione e validazione report di audit digitale | 2.0 |
+| {date_str} | Coordinamento e quality assurance documentazione | 1.0 |
+| | **TOTALE ORE** | **18.0** |
+| | **IMPORTO** | **4.500,00 €** |
 
 ---
 
@@ -697,23 +701,27 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 
 | Data | Attività | Ore |
 |------|----------|-----|
-| {date_str} | Analisi e validazione dati piattaforma | 1.5 |
-| {date_str} | Elaborazione punteggi di maturità per area | 1.0 |
-| {date_str} | Identificazione pattern, gap e aree critiche | 1.5 |
-| {date_str} | Supporto redazione report di audit | 1.0 |
-| {date_str} | Mappatura processi organizzativi beneficiario | 1.0 |
-| {date_str} | Preparazione materiali di sintesi | 1.0 |
-| | **TOTALE ORE** | **7.0** |
+| {date_str} | Setup e configurazione piattaforma di assessment | 2.0 |
+| {date_str} | Assistenza al beneficiario nella compilazione del questionario | 3.0 |
+| {date_str} | Analisi e validazione dati raccolti tramite piattaforma | 3.0 |
+| {date_str} | Elaborazione punteggi di maturità per area tematica | 2.0 |
+| {date_str} | Identificazione pattern, gap e aree critiche | 3.0 |
+| {date_str} | Redazione report di audit digitale professionale | 3.0 |
+| {date_str} | Mappatura processi organizzativi del beneficiario | 2.5 |
+| {date_str} | Preparazione materiali di sintesi e visualizzazioni | 2.0 |
+| {date_str} | Documentazione, archiviazione e chiusura pratica | 1.5 |
+| | **TOTALE ORE** | **22.0** |
+| | **IMPORTO** | **5.500,00 €** |
 
 ---
 
 ## RIEPILOGO COMPLESSIVO
 
-| Figura | Ruolo | Ore Totali |
-|--------|-------|------------|
-| Alexander Schneider | Esperto Trasformazione Digitale | 7.0 |
-| Elmar Schneider | Analista Innovazione di Processo | 7.0 |
-| | **TOTALE PROGETTO** | **14.0** |
+| Figura | Ruolo | Ore | Importo |
+|--------|-------|-----|---------|
+| Alexander Schneider | Esperto Trasformazione Digitale | 18.0 | 4.500,00 € |
+| Elmar Schneider | Analista Innovazione di Processo | 22.0 | 5.500,00 € |
+| | **TOTALE PROGETTO** | **40.0** | **10.000,00 €** |
 
 ---
 
@@ -722,11 +730,14 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 - Le attività sono state svolte nell'ambito del programma DIH — Digital Maturity Assessment
 - Le ore indicate si riferiscono all'intero ciclo di assessment per il beneficiario {org_name}
 - Il servizio è stato erogato da personale qualificato della SRL incaricata
+- Tariffa oraria applicata: 250,00 €/h (IVA esclusa)
 - Documentazione di supporto: Report di Maturità Digitale, Scheda di Audit, CV figure professionali
 
 ---
 
 **Firma Responsabile Progetto:** ____________________________
+
+**Firma Beneficiario:** ____________________________
 
 **Data:** {date_str}
 
