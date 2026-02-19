@@ -8,6 +8,7 @@ export interface Organization {
   fiscal_code: string | null;
   phone: string | null;
   admin_name: string | null;
+  program: string | null;
   access_code: string;
   created_at: string;
 }

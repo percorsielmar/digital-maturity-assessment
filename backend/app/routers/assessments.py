@@ -200,7 +200,24 @@ async def submit_assessment(
         "size": organization.size
     }
     
-    analysis_result = await run_crew_analysis(responses, questions_list, organization_info)
+    program = getattr(organization, 'program', 'dma') or 'dma'
+    
+    if program == "iso56002":
+        from app.questions_iso56002_data import ISO56002_QUESTIONS
+        questions_for_analysis = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(ISO56002_QUESTIONS)
+        ]
+    elif program == "governance":
+        from app.questions_governance_data import GOVERNANCE_QUESTIONS
+        questions_for_analysis = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(GOVERNANCE_QUESTIONS)
+        ]
+    else:
+        questions_for_analysis = questions_list
+    
+    analysis_result = await run_crew_analysis(responses, questions_for_analysis, organization_info, program=program)
     
     assessment.responses = responses
     assessment.scores = analysis_result.get("scores", {})

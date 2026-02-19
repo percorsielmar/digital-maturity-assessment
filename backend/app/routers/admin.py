@@ -265,19 +265,34 @@ async def regenerate_assessment_report(
             detail="Organizzazione non trovata"
         )
     
-    questions_result = await db.execute(select(Question))
-    questions = questions_result.scalars().all()
-    questions_list = [
-        {
-            "id": q.id,
-            "category": q.category,
-            "subcategory": q.subcategory,
-            "text": q.text,
-            "options": q.options,
-            "weight": q.weight
-        }
-        for q in questions
-    ]
+    program = getattr(organization, 'program', 'dma') or 'dma'
+    
+    if program == 'iso56002':
+        from app.questions_iso56002_data import ISO56002_QUESTIONS
+        questions_list = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(ISO56002_QUESTIONS)
+        ]
+    elif program == 'governance':
+        from app.questions_governance_data import GOVERNANCE_QUESTIONS
+        questions_list = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(GOVERNANCE_QUESTIONS)
+        ]
+    else:
+        questions_result = await db.execute(select(Question))
+        questions = questions_result.scalars().all()
+        questions_list = [
+            {
+                "id": q.id,
+                "category": q.category,
+                "subcategory": q.subcategory,
+                "text": q.text,
+                "options": q.options,
+                "weight": q.weight
+            }
+            for q in questions
+        ]
     
     organization_info = {
         "name": organization.name,
@@ -289,7 +304,8 @@ async def regenerate_assessment_report(
     analysis_result = await run_crew_analysis(
         assessment.responses or {},
         questions_list,
-        organization_info
+        organization_info,
+        program=program
     )
     
     assessment.scores = analysis_result.get("scores", {})
@@ -332,9 +348,18 @@ async def get_assessment_responses(
     )
     organization = org_result.scalar_one_or_none()
     
-    questions_result = await db.execute(select(Question).order_by(Question.order))
-    questions = questions_result.scalars().all()
-    questions_map = {q.id: q for q in questions}
+    program = getattr(organization, 'program', 'dma') or 'dma' if organization else 'dma'
+    
+    if program == 'iso56002':
+        from app.questions_iso56002_data import ISO56002_QUESTIONS
+        questions_map = {i + 1: q for i, q in enumerate(ISO56002_QUESTIONS)}
+    elif program == 'governance':
+        from app.questions_governance_data import GOVERNANCE_QUESTIONS
+        questions_map = {i + 1: q for i, q in enumerate(GOVERNANCE_QUESTIONS)}
+    else:
+        questions_result = await db.execute(select(Question).order_by(Question.order))
+        questions = questions_result.scalars().all()
+        questions_map = {q.id: q for q in questions}
     
     raw_responses = assessment.responses or {}
     answers_list = raw_responses.get("answers", [])
@@ -349,7 +374,17 @@ async def get_assessment_responses(
         
         question = questions_map.get(q_id)
         if question:
-            options = question.options or []
+            if program in ('iso56002', 'governance'):
+                options = question.get("options", []) or []
+                q_category = question.get("category", "")
+                q_subcategory = question.get("subcategory", "")
+                q_text = question.get("text", "")
+            else:
+                options = question.options or []
+                q_category = question.category
+                q_subcategory = question.subcategory
+                q_text = question.text
+            
             selected_text = ""
             selected_score = 0
             if isinstance(selected, int) and 0 <= selected < len(options):
@@ -359,9 +394,9 @@ async def get_assessment_responses(
             
             detailed_responses.append({
                 "question_id": q_id,
-                "category": question.category,
-                "subcategory": question.subcategory,
-                "question_text": question.text,
+                "category": q_category,
+                "subcategory": q_subcategory,
+                "question_text": q_text,
                 "selected_option_index": selected,
                 "selected_option_text": selected_text,
                 "selected_score": selected_score,

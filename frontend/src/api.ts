@@ -41,6 +41,7 @@ export const authApi = {
     fiscal_code?: string;
     phone?: string;
     admin_name?: string;
+    program?: string;
     password: string;
   }) => {
     const response = await api.post<{
@@ -196,6 +197,28 @@ export const organizationApi = {
     size?: string;
   }) => {
     const response = await api.put<Organization>('/auth/organization', data);
+    return response.data;
+  },
+};
+
+export const questionsIso56002Api = {
+  getQuestions: async () => {
+    const response = await api.get<{
+      questions: Question[];
+      categories: string[];
+      total: number;
+    }>('/questions-iso56002/');
+    return response.data;
+  },
+};
+
+export const questionsGovernanceApi = {
+  getQuestions: async () => {
+    const response = await api.get<{
+      questions: Question[];
+      categories: string[];
+      total: number;
+    }>('/questions-governance/');
     return response.data;
   },
 };

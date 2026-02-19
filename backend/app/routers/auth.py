@@ -50,6 +50,7 @@ async def register_organization(
         fiscal_code=org_data.fiscal_code,
         phone=org_data.phone,
         admin_name=org_data.admin_name,
+        program=org_data.program or "dma",
         access_code=access_code,
         hashed_password=get_password_hash(org_data.password)
     )

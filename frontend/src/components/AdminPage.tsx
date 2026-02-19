@@ -42,6 +42,7 @@ interface Organization {
   sector: string | null;
   size: string | null;
   email: string | null;
+  program: string | null;
   access_code: string;
   created_at: string | null;
   assessments_count: number;
@@ -1045,6 +1046,13 @@ ${staffProfiles.process_innovation_analyst}
                         <h3 className="font-semibold text-gray-800">{org.name}</h3>
                         <p className="text-sm text-gray-500">
                           {org.type} {org.sector && `• ${org.sector}`} {org.size && `• ${org.size}`}
+                          {org.program && org.program !== 'dma' && (
+                            <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              org.program === 'iso56002' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {org.program === 'iso56002' ? '56002' : 'Governance'}
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           Codice: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{org.access_code}</span>

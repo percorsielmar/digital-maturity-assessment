@@ -833,12 +833,341 @@ L'assessment fornisce al beneficiario una fotografia oggettiva e misurabile del 
     return sheet
 
 
-async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict) -> Dict[str, Any]:
+def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+    """Genera il report per l'audit propedeutico alla certificazione UNI/PdR 56002"""
+    from datetime import datetime
+    
+    org_name = organization_info.get("name", "Organizzazione")
+    org_type = organization_info.get("type", "azienda")
+    org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
+    
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    overall_score = analysis.get("overall_maturity", 0)
+    maturity_label = analysis.get("maturity_label", "Iniziale")
+    scores = analysis.get("scores", {})
+    gap_analysis = analysis.get("gap_analysis", {})
+    
+    iso_levels = {
+        1: "Non conforme — Il sistema di gestione dell'innovazione non è implementato",
+        2: "Parzialmente conforme — Esistono elementi isolati ma non un sistema strutturato",
+        3: "Sostanzialmente conforme — Il sistema è implementato ma richiede miglioramenti significativi",
+        4: "Conforme — Il sistema è implementato ed efficace, con margini di miglioramento",
+        5: "Pienamente conforme — Il sistema è maturo, efficace e in miglioramento continuo"
+    }
+    
+    conformity_level = iso_levels.get(round(overall_score), iso_levels[1])
+    
+    scores_text = ""
+    for category, score in scores.items():
+        gap_info = gap_analysis.get(category, {})
+        priority = gap_info.get("priority", "N/A")
+        gap_val = gap_info.get("gap", 0)
+        scores_text += f"### {category}\n"
+        scores_text += f"- **Punteggio:** {score}/5\n"
+        scores_text += f"- **Gap dalla conformità piena:** {gap_val}\n"
+        scores_text += f"- **Priorità di intervento:** {priority}\n\n"
+    
+    report = f"""# AUDIT PROPEDEUTICO — CERTIFICAZIONE UNI/PdR 56002
+
+## Gestione dell'Innovazione — Sistema di Gestione
+
+---
+
+**Organizzazione:** {org_name}
+**Tipologia:** {org_type_label}
+**Data assessment:** {current_date}
+
+---
+
+## 1. SINTESI DELLA VALUTAZIONE
+
+**Punteggio complessivo di conformità:** {overall_score}/5 — **{maturity_label}**
+
+**Livello di conformità:** {conformity_level}
+
+---
+
+## 2. PUNTEGGI PER AREA DELLA NORMA
+
+{scores_text}
+
+---
+
+## 3. GAP ANALYSIS RISPETTO AI REQUISITI UNI/PdR 56002
+
+La seguente analisi identifica le aree in cui l'organizzazione presenta i gap più significativi rispetto ai requisiti della norma, con indicazione della priorità di intervento per raggiungere la conformità.
+
+| Area | Punteggio | Gap | Priorità |
+|------|-----------|-----|----------|
+"""
+    
+    for category, info in gap_analysis.items():
+        report += f"| {category} | {info.get('current_score', 0)}/5 | {info.get('gap', 0)} | {info.get('priority', 'N/A')} |\n"
+    
+    report += f"""
+
+---
+
+## 4. RACCOMANDAZIONI PER IL PERCORSO DI CERTIFICAZIONE
+
+### Azioni prioritarie (gap > 2):
+"""
+    
+    high_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) > 2}
+    medium_gaps = {k: v for k, v in gap_analysis.items() if 1 < v.get("gap", 0) <= 2}
+    low_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) <= 1}
+    
+    if high_gaps:
+        for cat in high_gaps:
+            report += f"- **{cat}**: Intervento strutturale necessario. Definire un piano d'azione specifico con tempistiche e responsabili.\n"
+    else:
+        report += "- Nessuna area con gap critico.\n"
+    
+    report += "\n### Azioni di consolidamento (gap 1-2):\n"
+    if medium_gaps:
+        for cat in medium_gaps:
+            report += f"- **{cat}**: Rafforzamento necessario. Migliorare le pratiche esistenti e formalizzare i processi.\n"
+    else:
+        report += "- Nessuna area con gap medio.\n"
+    
+    report += "\n### Aree di eccellenza (gap < 1):\n"
+    if low_gaps:
+        for cat in low_gaps:
+            report += f"- **{cat}**: Mantenere il livello raggiunto e condividere le best practice.\n"
+    else:
+        report += "- Nessuna area al livello di eccellenza.\n"
+    
+    report += f"""
+
+---
+
+## 5. PIANO DI AZIONE PROPOSTO
+
+Per raggiungere la conformità alla UNI/PdR 56002, si raccomanda il seguente percorso:
+
+1. **Fase 1 — Analisi e pianificazione** (1-2 mesi)
+   - Approfondimento delle aree con gap critico
+   - Definizione della politica per l'innovazione
+   - Assegnazione ruoli e responsabilità
+
+2. **Fase 2 — Implementazione** (3-6 mesi)
+   - Implementazione del sistema di gestione dell'innovazione
+   - Formazione del personale
+   - Definizione dei processi di ideazione e gestione progetti
+
+3. **Fase 3 — Monitoraggio e audit interno** (1-2 mesi)
+   - Audit interno di conformità
+   - Azioni correttive
+   - Riesame della direzione
+
+4. **Fase 4 — Certificazione** (1 mese)
+   - Audit di certificazione da parte dell'ente certificatore
+   - Eventuali azioni correttive post-audit
+
+**Tempistica stimata complessiva:** 6-12 mesi
+
+---
+
+## 6. NOTE METODOLOGICHE
+
+L'assessment è stato condotto utilizzando un questionario strutturato basato sui requisiti della norma UNI/PdR 56002:2019 "Gestione dell'innovazione — Sistema di gestione dell'innovazione — Guida". La valutazione copre le 7 aree principali della norma più una sezione dedicata a strumenti e metodi.
+
+L'assessment è stato realizzato da esperti in innovazione e trasformazione digitale, assicurando un'analisi contestualizzata e l'elaborazione di raccomandazioni operative orientate al raggiungimento della certificazione.
+
+---
+
+**Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**
+"""
+    return report
+
+
+def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+    """Genera il report per l'assessment di Governance Trasparente"""
+    from datetime import datetime
+    
+    org_name = organization_info.get("name", "Organizzazione")
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    overall_score = analysis.get("overall_maturity", 0)
+    maturity_label = analysis.get("maturity_label", "Iniziale")
+    scores = analysis.get("scores", {})
+    gap_analysis = analysis.get("gap_analysis", {})
+    
+    gov_levels = {
+        1: "Opaco — Governance non trasparente, processi non documentati, partecipazione assente",
+        2: "Reattivo — Trasparenza minima obbligatoria, partecipazione limitata",
+        3: "Strutturato — Trasparenza adeguata, primi strumenti di partecipazione attivi",
+        4: "Proattivo — Trasparenza avanzata, partecipazione strutturata, strumenti digitali integrati",
+        5: "Eccellente — Governance aperta, partecipazione deliberativa, innovazione continua"
+    }
+    
+    gov_level = gov_levels.get(round(overall_score), gov_levels[1])
+    
+    scores_text = ""
+    for category, score in scores.items():
+        gap_info = gap_analysis.get(category, {})
+        priority = gap_info.get("priority", "N/A")
+        gap_val = gap_info.get("gap", 0)
+        scores_text += f"### {category}\n"
+        scores_text += f"- **Punteggio:** {score}/5\n"
+        scores_text += f"- **Gap dall'eccellenza:** {gap_val}\n"
+        scores_text += f"- **Priorità di intervento:** {priority}\n\n"
+    
+    report = f"""# REPORT DI ASSESSMENT — GOVERNANCE TRASPARENTE
+
+## Percorso di Formazione e Consulenza per la Governance Partecipativa nella PA
+
+---
+
+**Ente:** {org_name}
+**Data assessment:** {current_date}
+**Termine attività:** 30 aprile 2026
+
+---
+
+## 1. SINTESI DELLA VALUTAZIONE
+
+**Punteggio complessivo:** {overall_score}/5 — **{maturity_label}**
+
+**Livello di governance:** {gov_level}
+
+---
+
+## 2. PUNTEGGI PER AREA TEMATICA
+
+{scores_text}
+
+---
+
+## 3. GAP ANALYSIS
+
+| Area | Punteggio | Gap | Priorità |
+|------|-----------|-----|----------|
+"""
+    
+    for category, info in gap_analysis.items():
+        report += f"| {category} | {info.get('current_score', 0)}/5 | {info.get('gap', 0)} | {info.get('priority', 'N/A')} |\n"
+    
+    high_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) > 2}
+    medium_gaps = {k: v for k, v in gap_analysis.items() if 1 < v.get("gap", 0) <= 2}
+    low_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) <= 1}
+    
+    report += f"""
+
+---
+
+## 4. RACCOMANDAZIONI OPERATIVE
+
+### Interventi prioritari (gap > 2):
+"""
+    if high_gaps:
+        for cat in high_gaps:
+            report += f"- **{cat}**: Intervento strutturale necessario per raggiungere standard adeguati di governance trasparente.\n"
+    else:
+        report += "- Nessuna area con gap critico.\n"
+    
+    report += "\n### Interventi di rafforzamento (gap 1-2):\n"
+    if medium_gaps:
+        for cat in medium_gaps:
+            report += f"- **{cat}**: Consolidamento delle pratiche esistenti e introduzione di strumenti avanzati.\n"
+    else:
+        report += "- Nessuna area con gap medio.\n"
+    
+    report += "\n### Aree di eccellenza (gap < 1):\n"
+    if low_gaps:
+        for cat in low_gaps:
+            report += f"- **{cat}**: Mantenere il livello raggiunto, condividere le best practice con altri enti.\n"
+    else:
+        report += "- Nessuna area al livello di eccellenza.\n"
+    
+    report += f"""
+
+---
+
+## 5. PERCORSO FORMATIVO E CONSULENZIALE
+
+Il servizio prevede un percorso articolato in **5 giornate complessive**:
+
+### Giornate in presenza (3 × 4 ore = 12 ore)
+
+**Giornata 1 — Trasparenza e tracciabilità**
+- Quadro normativo: D.Lgs. 33/2013, FOIA, L. 190/2012, CAD
+- Strumenti digitali per la trasparenza amministrativa
+- Open data e pubblicazione proattiva
+- Esercitazione pratica: analisi della sezione Amministrazione Trasparente
+
+**Giornata 2 — Partecipazione e co-progettazione**
+- Strumenti digitali per la partecipazione dei cittadini
+- Consultazioni pubbliche e bilancio partecipativo
+- Monitoraggio civico e accountability
+- Laboratorio: progettazione di un processo partecipativo
+
+**Giornata 3 — Governance digitale e conformità PNRR**
+- Piattaforme digitali per la governance (SPID, pagoPA, IO, PDND)
+- Principi PNRR: parità di genere, DNSH, inclusione
+- Gestione finanziaria e prevenzione doppio finanziamento
+- Piano di miglioramento personalizzato
+
+### Sessioni online (2 × 2 ore = 4 ore)
+
+**Sessione 1 — Analisi delle pratiche esistenti**
+- Revisione degli strumenti e processi attuali dell'ente
+- Identificazione delle aree di miglioramento prioritarie
+- Definizione degli obiettivi del percorso
+
+**Sessione 2 — Follow-up e piano operativo**
+- Verifica dell'avanzamento delle azioni concordate
+- Supporto all'implementazione degli strumenti
+- Definizione del piano operativo di miglioramento
+
+### Attività asincrone
+- Analisi documentale delle pratiche dell'ente
+- Redazione del report operativo con raccomandazioni
+- Supporto a distanza per l'implementazione
+
+---
+
+## 6. CONFORMITÀ AI PRINCIPI PNRR
+
+Il presente servizio è erogato nel rispetto dei seguenti principi:
+
+- **Sana gestione finanziaria** — Reg. (UE, Euratom) 2018/1046 e art. 22 Reg. (UE) 2021/241
+- **Prevenzione conflitti di interessi, frodi e corruzione**
+- **Assenza doppio finanziamento**
+- **Parità di genere** — Protezione e valorizzazione dei giovani
+- **Superamento divari territoriali** — Inclusione lavorativa persone con disabilità
+- **Principio DNSH** — Art. 17 Reg. (UE) 2020/852, non arrecare danno significativo agli obiettivi ambientali
+- **Conformità normativa** — Rispetto della normativa nazionale ed europea applicabile
+
+---
+
+## 7. NOTE METODOLOGICHE
+
+L'assessment è stato condotto utilizzando un questionario strutturato basato sui principi di governance trasparente, partecipazione dei cittadini e conformità normativa. La valutazione copre 7 aree tematiche con 21 domande a risposta multipla pesata.
+
+L'assessment è stato realizzato da esperti in governance digitale e innovazione della PA, assicurando un'analisi contestualizzata e l'elaborazione di raccomandazioni operative orientate al rafforzamento della trasparenza e della partecipazione.
+
+---
+
+**Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**
+"""
+    return report
+
+
+async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict, program: str = "dma") -> Dict[str, Any]:
     """Run the analysis pipeline with algorithmic scoring"""
     
     analysis = analyze_responses(responses, questions, organization_info)
-    report = generate_report(analysis, organization_info)
-    audit_sheet = generate_audit_sheet(analysis, organization_info)
+    
+    if program == "iso56002":
+        report = generate_iso56002_report(analysis, organization_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info)
+    elif program == "governance":
+        report = generate_governance_report(analysis, organization_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info)
+    else:
+        report = generate_report(analysis, organization_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info)
+    
     staff_profiles = get_staff_profiles()
     
     return {

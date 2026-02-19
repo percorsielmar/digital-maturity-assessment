@@ -11,7 +11,7 @@ import {
   MessageCircle,
   Send
 } from 'lucide-react';
-import { questionsApi, assessmentsApi, assistantApi, organizationApi } from '../api';
+import { questionsApi, assessmentsApi, assistantApi, organizationApi, questionsIso56002Api, questionsGovernanceApi } from '../api';
 import { Question, Answer } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -107,7 +107,37 @@ const AssessmentPage: React.FC = () => {
 
   const loadQuestions = async () => {
     try {
-      const data = await questionsApi.getQuestions();
+      const program = organization?.program || 'dma';
+      let data: Question[];
+      
+      if (program === 'iso56002') {
+        const result = await questionsIso56002Api.getQuestions();
+        data = result.questions.map((q: any, i: number) => ({
+          id: i + 1,
+          category: q.category,
+          subcategory: q.subcategory || null,
+          text: q.text,
+          hint: q.hint || null,
+          options: q.options,
+          weight: q.weight || 1.0,
+          order: q.order || i + 1,
+        }));
+      } else if (program === 'governance') {
+        const result = await questionsGovernanceApi.getQuestions();
+        data = result.questions.map((q: any, i: number) => ({
+          id: i + 1,
+          category: q.category,
+          subcategory: q.subcategory || null,
+          text: q.text,
+          hint: q.hint || null,
+          options: q.options,
+          weight: q.weight || 1.0,
+          order: q.order || i + 1,
+        }));
+      } else {
+        data = await questionsApi.getQuestions();
+      }
+      
       setQuestions(data);
       const uniqueCategories = [...new Set(data.map(q => q.category))];
       setCategories(uniqueCategories);

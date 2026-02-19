@@ -110,9 +110,20 @@ const Dashboard: React.FC = () => {
     setCreatingAssessment(false);
   };
 
+  const program = organization?.program || 'dma';
+  
+  const programLabels: Record<string, { title: string; subtitle: string; assessmentLabel: string }> = {
+    dma: { title: 'I tuoi Assessment', subtitle: 'Gestisci le valutazioni di maturità digitale', assessmentLabel: 'Assessment Maturità Digitale' },
+    iso56002: { title: 'Audit UNI/PdR 56002', subtitle: 'Gestione dell\'Innovazione — Assessment di Conformità', assessmentLabel: 'Audit 56002' },
+    governance: { title: 'Governance Trasparente', subtitle: 'Formazione e Consulenza per la PA', assessmentLabel: 'Assessment Governance' },
+  };
+  const labels = programLabels[program] || programLabels.dma;
+
   const handleLogout = () => {
     logout();
-    navigate('/');
+    if (program === 'iso56002') navigate('/iso56002');
+    else if (program === 'governance') navigate('/governance');
+    else navigate('/');
   };
 
   const handleSaveProfile = async () => {
@@ -330,8 +341,8 @@ const Dashboard: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">I tuoi Assessment</h2>
-            <p className="text-gray-500 mt-1">Gestisci le valutazioni di maturità digitale</p>
+            <h2 className="text-2xl font-bold text-gray-800">{labels.title}</h2>
+            <p className="text-gray-500 mt-1">{labels.subtitle}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -344,8 +355,9 @@ const Dashboard: React.FC = () => {
               ) : (
                 <Plus className="w-5 h-5" />
               )}
-              Assessment Livello 1
+              {program === 'dma' ? 'Assessment Livello 1' : labels.assessmentLabel}
             </button>
+            {program === 'dma' && (
             <button
               onClick={() => handleNewAssessment(2)}
               disabled={creatingAssessment}
@@ -358,6 +370,7 @@ const Dashboard: React.FC = () => {
               )}
               Assessment Livello 2
             </button>
+            )}
           </div>
           {serverStatus && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
@@ -377,7 +390,7 @@ const Dashboard: React.FC = () => {
               <ClipboardList className="w-10 h-10 text-primary-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Nessun assessment</h3>
-            <p className="text-gray-500 mb-6">Inizia la tua prima valutazione di maturità digitale</p>
+            <p className="text-gray-500 mb-6">{program === 'dma' ? 'Inizia la tua prima valutazione di maturità digitale' : `Inizia il tuo primo ${labels.assessmentLabel}`}</p>
             <button
               onClick={() => handleNewAssessment(1)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
@@ -413,7 +426,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-800">
-                        {assessment.level === 2 ? 'Assessment 2' : 'Assessment 1'} 
+                        {program === 'dma' ? (assessment.level === 2 ? 'Assessment 2' : 'Assessment 1') : labels.assessmentLabel} 
                         <span className="text-gray-400 font-normal ml-1">#{assessment.id}</span>
                       </h3>
                       <p className="text-sm text-gray-500">

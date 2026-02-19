@@ -11,6 +11,7 @@ class OrganizationCreate(BaseModel):
     fiscal_code: Optional[str] = None
     phone: Optional[str] = None
     admin_name: Optional[str] = None
+    program: Optional[str] = "dma"
     password: str
 
 class OrganizationResponse(BaseModel):
@@ -23,6 +24,7 @@ class OrganizationResponse(BaseModel):
     fiscal_code: Optional[str]
     phone: Optional[str]
     admin_name: Optional[str]
+    program: Optional[str] = "dma"
     access_code: str
     created_at: datetime
     

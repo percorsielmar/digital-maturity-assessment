@@ -17,6 +17,7 @@ class Organization(Base):
     fiscal_code = Column(String(50))  # Codice Fiscale / Partita IVA
     phone = Column(String(50))  # Numero di telefono
     admin_name = Column(String(255))  # Nome e Cognome responsabile
+    program = Column(String(50), default="dma")  # "dma", "iso56002", "governance"
     created_at = Column(DateTime, default=datetime.utcnow)
     
     assessments = relationship("Assessment", back_populates="organization")

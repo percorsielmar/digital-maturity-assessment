@@ -12,12 +12,30 @@ declare global {
 
 const GOOGLE_CLIENT_ID = '776005980883-iodb4evtm9imedvilsihmfajpauj8mrn.apps.googleusercontent.com';
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  program?: string;
+  title?: string;
+  subtitle?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  defaultType?: string;
+  showTypeSelector?: boolean;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({
+  program = 'dma',
+  title = 'Valutazione Maturità Digitale',
+  subtitle = 'Per Aziende e Pubbliche Amministrazioni',
+  gradientFrom = 'from-primary-600',
+  gradientTo = 'to-primary-900',
+  defaultType = 'azienda',
+  showTypeSelector = true,
+}) => {
   const [isLogin, setIsLogin] = useState(true);
   const [accessCode, setAccessCode] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [type, setType] = useState('azienda');
+  const [type, setType] = useState(defaultType);
   const [sector, setSector] = useState('');
   const [size, setSize] = useState('');
   const [email, setEmail] = useState('');
@@ -102,6 +120,7 @@ const LoginPage: React.FC = () => {
         fiscal_code: fiscalCode || undefined,
         phone: phone || undefined,
         admin_name: adminName || undefined,
+        program,
         password,
       });
       setNewAccessCode(response.organization.access_code);
@@ -116,7 +135,7 @@ const LoginPage: React.FC = () => {
 
   if (showAccessCode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-900 flex items-center justify-center p-4">
+      <div className={`min-h-screen bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center p-4`}>
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
           <div className="text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -147,14 +166,14 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-900 flex items-center justify-center p-4">
+    <div className={`min-h-screen bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center p-4`}>
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-10 h-10 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Valutazione Maturità Digitale</h1>
-          <p className="text-gray-500 mt-2">Per Aziende e Pubbliche Amministrazioni</p>
+          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+          <p className="text-gray-500 mt-2">{subtitle}</p>
         </div>
 
         <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
@@ -254,6 +273,7 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
+            {showTypeSelector && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tipologia *
@@ -267,6 +287,7 @@ const LoginPage: React.FC = () => {
                 <option value="pa">Pubblica Amministrazione</option>
               </select>
             </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Settore

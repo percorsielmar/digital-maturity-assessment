@@ -24,6 +24,26 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/iso56002" element={
+            <LoginPage
+              program="iso56002"
+              title="Audit Propedeutico UNI/PdR 56002"
+              subtitle="Gestione dell'Innovazione — Assessment di Conformità"
+              gradientFrom="from-emerald-600"
+              gradientTo="to-emerald-900"
+            />
+          } />
+          <Route path="/governance" element={
+            <LoginPage
+              program="governance"
+              title="Governance Trasparente"
+              subtitle="Formazione e Consulenza per la PA"
+              gradientFrom="from-amber-600"
+              gradientTo="to-amber-900"
+              defaultType="pa"
+              showTypeSelector={false}
+            />
+          } />
           <Route path="/admin" element={<AdminPage />} />
           <Route
             path="/dashboard"
