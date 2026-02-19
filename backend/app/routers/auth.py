@@ -108,6 +108,7 @@ class GoogleLoginRequest(BaseModel):
     credential: str
     org_name: str = None
     org_type: str = "azienda"
+    program: str = "dma"
 
 @router.post("/google", response_model=Token)
 async def google_login(
@@ -150,6 +151,7 @@ async def google_login(
                 name=name,
                 type=google_data.org_type,
                 email=email,
+                program=google_data.program or "dma",
                 access_code=access_code,
                 hashed_password=get_password_hash(access_code)
             )

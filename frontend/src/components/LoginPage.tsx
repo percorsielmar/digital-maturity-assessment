@@ -79,7 +79,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setError('');
     setLoading(true);
     try {
-      const result = await authApi.googleLogin(response.credential);
+      const result = await authApi.googleLogin(response.credential, program);
       login(result.access_token, result.organization);
       navigate('/dashboard');
     } catch (err: any) {
