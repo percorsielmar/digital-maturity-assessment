@@ -1036,11 +1036,11 @@ ${staffProfiles.process_innovation_analyst}
           ) : (
             <div className="divide-y divide-gray-100">
               {organizations.map((org) => (
-                <div key={org.id} className="p-6">
+                <div key={org.id} className={`p-6 ${org.program === 'iso56002' ? 'bg-emerald-50' : org.program === 'governance' ? 'bg-amber-50' : ''}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-primary-600" />
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${org.program === 'iso56002' ? 'bg-emerald-100' : org.program === 'governance' ? 'bg-amber-100' : 'bg-primary-100'}`}>
+                        <Building2 className={`w-6 h-6 ${org.program === 'iso56002' ? 'text-emerald-600' : org.program === 'governance' ? 'text-amber-600' : 'text-primary-600'}`} />
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-800">{org.name}</h3>
@@ -1091,13 +1091,13 @@ ${staffProfiles.process_innovation_analyst}
                       {org.assessments.map((assessment) => (
                         <div 
                           key={assessment.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className={`flex items-center justify-between p-3 rounded-lg ${org.program === 'iso56002' ? 'bg-emerald-100/60' : org.program === 'governance' ? 'bg-amber-100/60' : 'bg-gray-50'}`}
                         >
                           <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-gray-400" />
+                            <FileText className={`w-5 h-5 ${org.program === 'iso56002' ? 'text-emerald-500' : org.program === 'governance' ? 'text-amber-500' : 'text-gray-400'}`} />
                             <div>
                               <p className="text-sm font-medium text-gray-700">
-                                {(assessment as any).level === 2 ? 'Assessment 2' : 'Assessment 1'} <span className="text-gray-400">#{assessment.id}</span>
+                                {org.program === 'iso56002' ? 'Audit 56002' : org.program === 'governance' ? 'Assessment Governance' : ((assessment as any).level === 2 ? 'Assessment 2' : 'Assessment 1')} <span className="text-gray-400">#{assessment.id}</span>
                               </p>
                               <p className="text-xs text-gray-500">
                                 {assessment.created_at 
