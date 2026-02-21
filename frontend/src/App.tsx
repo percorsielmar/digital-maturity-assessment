@@ -44,6 +44,15 @@ const App: React.FC = () => {
               showTypeSelector={false}
             />
           } />
+          <Route path="/patto-di-senso" element={
+            <LoginPage
+              program="patto_di_senso"
+              title="Patto di Senso"
+              subtitle="Audit di Maturità — Innovazione Sociale e Territoriale"
+              gradientFrom="from-purple-600"
+              gradientTo="to-purple-900"
+            />
+          } />
           <Route path="/admin" element={<AdminPage />} />
           <Route
             path="/dashboard"

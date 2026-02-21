@@ -1153,6 +1153,236 @@ L'assessment è stato realizzato da esperti in governance digitale e innovazione
     return report
 
 
+def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+    """Genera il report per l'Audit di Maturità del Patto di Senso"""
+    from datetime import datetime
+    
+    org_name = organization_info.get("name", "Organizzazione")
+    org_type = organization_info.get("type", "azienda")
+    org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
+    sector = organization_info.get("sector", "Non specificato")
+    size = organization_info.get("size", "Non specificata")
+    
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    overall_score = analysis.get("overall_maturity", 0)
+    maturity_label = analysis.get("maturity_label", "Iniziale")
+    scores = analysis.get("scores", {})
+    gap_analysis = analysis.get("gap_analysis", {})
+    
+    patto_levels = {
+        1: "Non idoneo — L'organizzazione non soddisfa i requisiti minimi per l'adesione al Patto di Senso",
+        2: "Parzialmente idoneo — Esistono elementi di base ma sono necessari interventi significativi",
+        3: "Idoneo con riserva — L'organizzazione soddisfa i requisiti minimi, con aree di miglioramento",
+        4: "Idoneo — L'organizzazione è pronta per l'implementazione del Patto di Senso",
+        5: "Eccellente — L'organizzazione è un modello di riferimento per il Patto di Senso"
+    }
+    
+    patto_level = patto_levels.get(round(overall_score), patto_levels[1])
+    
+    scores_text = ""
+    for category, score in scores.items():
+        gap_info = gap_analysis.get(category, {})
+        priority = gap_info.get("priority", "N/A")
+        gap_val = gap_info.get("gap", 0)
+        bar = "█" * int(score) + "░" * (5 - int(score))
+        scores_text += f"### {category}\n"
+        scores_text += f"- **Punteggio:** {score}/5 [{bar}]\n"
+        scores_text += f"- **Gap dal target:** {gap_val}\n"
+        scores_text += f"- **Priorità di intervento:** {priority}\n\n"
+    
+    report = f"""# AUDIT DI MATURITÀ — PATTO DI SENSO
+
+## Innovazione Sociale e Territoriale
+### Modello di Sviluppo Sostenibile con IA, Blockchain ed Etica
+
+---
+
+**Organizzazione:** {org_name}
+**Tipologia:** {org_type_label}
+**Settore:** {sector}
+**Dimensione:** {size}
+**Data assessment:** {current_date}
+
+---
+
+## 1. EXECUTIVE SUMMARY
+
+### Il Patto di Senso
+
+Il Patto di Senso è un modello di innovazione sociale e territoriale che integra tecnologia (IA e blockchain) ed etica per uno sviluppo sostenibile. L'audit valuta la maturità dell'organizzazione rispetto ai quattro pilastri fondamentali del modello.
+
+### Risultato Complessivo
+
+**Punteggio complessivo:** {overall_score}/5 — **{maturity_label}**
+
+**Livello di idoneità:** {patto_level}
+
+### Le Quattro Macro-Aree Valutate
+
+| Macro-Area | Domande | Descrizione |
+|------------|---------|-------------|
+| **Governance e Trasparenza** | 27 | Meccanismi decisionali etici, conformità normativa, coinvolgimento stakeholder |
+| **Innovazione Tecnologica** | 27 | Adozione tecnologie emergenti (IA, Blockchain, IoT), cybersecurity, competenze digitali |
+| **Sostenibilità Ambientale** | 27 | Impatto ambientale, efficienza energetica, allineamento SDGs ONU |
+| **Valore Sociale ed Economico** | 27 | Impatto territoriale, inclusione, welfare, sostenibilità della filiera |
+
+---
+
+## 2. INQUADRAMENTO METODOLOGICO
+
+### Framework del Patto di Senso
+
+L'audit si basa su **108 domande** strutturate in 4 macro-aree da 27 domande ciascuna, con risposte su scala 1-5. Il framework valuta la capacità dell'organizzazione di:
+
+- **Governare con trasparenza** — Decisioni etiche, partecipative e verificabili
+- **Innovare con responsabilità** — Tecnologie emergenti al servizio del bene comune
+- **Sostenere l'ambiente** — Impegno concreto verso gli SDGs e la neutralità climatica
+- **Generare valore condiviso** — Impatto positivo su territorio, comunità e filiera
+
+### Scala di Maturità
+
+| Livello | Punteggio | Idoneità Patto di Senso |
+|---------|-----------|------------------------|
+| Iniziale | 1.0 - 1.9 | Non idoneo — Interventi strutturali necessari |
+| Gestito | 2.0 - 2.9 | Parzialmente idoneo — Piano di adeguamento richiesto |
+| Definito | 3.0 - 3.9 | Idoneo con riserva — Miglioramenti specifici necessari |
+| Avanzato | 4.0 - 4.4 | Idoneo — Pronto per l'implementazione |
+| Ottimizzato | 4.5 - 5.0 | Eccellente — Modello di riferimento |
+
+### Collegamento con Smart Contract e Tokenomics
+
+Il Patto di Senso prevede che gli impegni emersi dall'audit vengano tradotti in:
+- **Smart Contract su blockchain binaria** — Condizioni verificabili (vero/falso)
+- **Token A3** — Per la governance distribuita e il voto sulle proposte
+- **Token L3** — Per premiare l'impatto generato e i comportamenti virtuosi
+
+---
+
+## 3. PROFILO DI MATURITÀ PER MACRO-AREA
+
+{scores_text}
+
+---
+
+## 4. GAP ANALYSIS
+
+| Macro-Area | Punteggio | Gap | Priorità |
+|------------|-----------|-----|----------|
+"""
+    
+    for category, info in gap_analysis.items():
+        priority_icon = "🔴" if info.get("priority") == "Alta" else "🟡" if info.get("priority") == "Media" else "🟢"
+        report += f"| {category} | {info.get('current_score', 0)}/5 | {info.get('gap', 0)} | {priority_icon} {info.get('priority', 'N/A')} |\n"
+    
+    high_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) > 2}
+    medium_gaps = {k: v for k, v in gap_analysis.items() if 1 < v.get("gap", 0) <= 2}
+    low_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) <= 1}
+    
+    report += f"""
+
+---
+
+## 5. RACCOMANDAZIONI PER L'ADESIONE AL PATTO DI SENSO
+
+### Interventi critici (gap > 2):
+"""
+    if high_gaps:
+        for cat in high_gaps:
+            report += f"- **{cat}**: Intervento strutturale necessario. Definire un piano d'azione con tempistiche, responsabili e KPI misurabili.\n"
+    else:
+        report += "- Nessuna area con gap critico.\n"
+    
+    report += "\n### Interventi di consolidamento (gap 1-2):\n"
+    if medium_gaps:
+        for cat in medium_gaps:
+            report += f"- **{cat}**: Rafforzamento delle pratiche esistenti e formalizzazione dei processi.\n"
+    else:
+        report += "- Nessuna area con gap medio.\n"
+    
+    report += "\n### Aree di eccellenza (gap < 1):\n"
+    if low_gaps:
+        for cat in low_gaps:
+            report += f"- **{cat}**: Mantenere il livello raggiunto e condividere le best practice.\n"
+    else:
+        report += "- Nessuna area al livello di eccellenza.\n"
+    
+    report += f"""
+
+---
+
+## 6. ROADMAP VERSO IL PATTO DI SENSO
+
+### Fase 1 — Audit e Pianificazione (0-3 mesi)
+- Approfondimento delle aree con gap critico
+- Definizione della politica di sostenibilità e governance etica
+- Mappatura degli stakeholder e piano di coinvolgimento
+- Identificazione degli SDG prioritari
+
+### Fase 2 — Implementazione (3-9 mesi)
+- Implementazione delle azioni correttive per le aree critiche
+- Adozione di tecnologie emergenti (IA, blockchain) dove applicabile
+- Formazione del personale su etica, sostenibilità e innovazione
+- Avvio dei processi di stakeholder engagement
+
+### Fase 3 — Codifica nel Patto (9-12 mesi)
+- Traduzione degli impegni in clausole verificabili (Legal Engineering)
+- Implementazione dello Smart Contract su blockchain binaria
+- Definizione dei KPI monitorabili tramite oracoli digitali e IoT
+- Attivazione del sistema di tokenomics (Token A3 e L3)
+
+### Fase 4 — Monitoraggio e Miglioramento Continuo (12+ mesi)
+- Monitoraggio automatizzato tramite oracoli e sensori
+- Verifica periodica delle condizioni dello Smart Contract
+- Distribuzione incentivi per obiettivi raggiunti
+- Riesame e aggiornamento del Patto
+
+**Tempistica stimata complessiva:** 12-18 mesi
+
+---
+
+## 7. ALLINEAMENTO STRATEGICO
+
+### Coerenza con il Framework del Patto di Senso
+
+L'assessment è allineato ai pilastri fondamentali del modello:
+
+- **Transizione Digitale ed Etica** — IA, blockchain e IoT con approccio human-centric (Rome Call for AI Ethics)
+- **Sostenibilità Integrale** — Allineamento agli SDGs dell'Agenda 2030 ONU
+- **IA come Oracolo Digitale** — Facilitatore analitico e predittivo a supporto delle decisioni umane
+- **Sensers e Oracolo di Senso** — Sistema collaborativo esperti-comunità per orientare la tecnologia al bene comune
+
+### Coerenza con Obiettivi UE e Nazionali
+
+- **European Green Deal** — Neutralità climatica e economia circolare
+- **Digital Europe Programme** — Rafforzamento capacità digitali
+- **PNRR** — Digitalizzazione, sostenibilità e inclusione
+- **Strategia Nazionale per lo Sviluppo Sostenibile** — Agenda 2030
+
+---
+
+## 8. CONCLUSIONI
+
+### Valutazione Complessiva
+
+{org_name} ha conseguito un punteggio di **{overall_score}/5** nell'Audit di Maturità del Patto di Senso. {"L'organizzazione soddisfa i requisiti minimi per l'adesione al Patto di Senso, con aree di miglioramento identificate." if overall_score >= 3 else "L'organizzazione necessita di interventi significativi prima di poter aderire al Patto di Senso. Si raccomanda di seguire la roadmap proposta."}
+
+### Prossimi Passi
+
+1. Condivisione del report con il management e gli stakeholder chiave
+2. Definizione delle priorità di intervento
+3. Avvio del percorso di adeguamento secondo la roadmap proposta
+4. Pianificazione dell'implementazione dello Smart Contract
+
+---
+
+**Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**
+*Programma Patto di Senso — Innovazione Sociale e Territoriale*
+
+L'assessment è stato realizzato da esperti in innovazione sociale, governance etica e trasformazione digitale, assicurando un'analisi contestualizzata della maturità dell'organizzazione rispetto ai requisiti del Patto di Senso.
+"""
+    return report
+
+
 async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict, program: str = "dma") -> Dict[str, Any]:
     """Run the analysis pipeline with algorithmic scoring"""
     
@@ -1163,6 +1393,9 @@ async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], or
         audit_sheet = generate_audit_sheet(analysis, organization_info)
     elif program == "governance":
         report = generate_governance_report(analysis, organization_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info)
+    elif program == "patto_di_senso":
+        report = generate_patto_di_senso_report(analysis, organization_info)
         audit_sheet = generate_audit_sheet(analysis, organization_info)
     else:
         report = generate_report(analysis, organization_info)

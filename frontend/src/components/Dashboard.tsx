@@ -116,6 +116,7 @@ const Dashboard: React.FC = () => {
     dma: { title: 'I tuoi Assessment', subtitle: 'Gestisci le valutazioni di maturità digitale', assessmentLabel: 'Assessment Maturità Digitale' },
     iso56002: { title: 'Audit UNI/PdR 56002', subtitle: 'Gestione dell\'Innovazione — Assessment di Conformità', assessmentLabel: 'Audit 56002' },
     governance: { title: 'Governance Trasparente', subtitle: 'Formazione e Consulenza per la PA', assessmentLabel: 'Assessment Governance' },
+    patto_di_senso: { title: 'Patto di Senso', subtitle: 'Audit di Maturità — Innovazione Sociale e Territoriale', assessmentLabel: 'Audit Patto di Senso' },
   };
   const labels = programLabels[program] || programLabels.dma;
 
@@ -123,6 +124,7 @@ const Dashboard: React.FC = () => {
     logout();
     if (program === 'iso56002') navigate('/iso56002');
     else if (program === 'governance') navigate('/governance');
+    else if (program === 'patto_di_senso') navigate('/patto-di-senso');
     else navigate('/');
   };
 

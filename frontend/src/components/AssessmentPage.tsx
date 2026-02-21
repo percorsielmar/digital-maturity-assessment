@@ -11,7 +11,7 @@ import {
   MessageCircle,
   Send
 } from 'lucide-react';
-import { questionsApi, assessmentsApi, assistantApi, organizationApi, questionsIso56002Api, questionsGovernanceApi } from '../api';
+import { questionsApi, assessmentsApi, assistantApi, organizationApi, questionsIso56002Api, questionsGovernanceApi, questionsPattoDiSensoApi } from '../api';
 import { Question, Answer } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -124,6 +124,18 @@ const AssessmentPage: React.FC = () => {
         }));
       } else if (program === 'governance') {
         const result = await questionsGovernanceApi.getQuestions();
+        data = result.questions.map((q: any, i: number) => ({
+          id: i + 1,
+          category: q.category,
+          subcategory: q.subcategory || null,
+          text: q.text,
+          hint: q.hint || null,
+          options: q.options,
+          weight: q.weight || 1.0,
+          order: q.order || i + 1,
+        }));
+      } else if (program === 'patto_di_senso') {
+        const result = await questionsPattoDiSensoApi.getQuestions();
         data = result.questions.map((q: any, i: number) => ({
           id: i + 1,
           category: q.category,

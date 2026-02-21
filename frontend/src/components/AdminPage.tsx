@@ -1036,19 +1036,19 @@ ${staffProfiles.process_innovation_analyst}
           ) : (
             <div className="divide-y divide-gray-100">
               {organizations.map((org) => (
-                <div key={org.id} className={`p-6 border-l-4 ${org.program === 'iso56002' ? 'bg-emerald-50 border-l-emerald-500' : org.program === 'governance' ? 'bg-amber-50 border-l-amber-500' : 'border-l-blue-500'}`}>
+                <div key={org.id} className={`p-6 border-l-4 ${org.program === 'iso56002' ? 'bg-emerald-50 border-l-emerald-500' : org.program === 'governance' ? 'bg-amber-50 border-l-amber-500' : org.program === 'patto_di_senso' ? 'bg-purple-50 border-l-purple-500' : 'border-l-blue-500'}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${org.program === 'iso56002' ? 'bg-emerald-100' : org.program === 'governance' ? 'bg-amber-100' : 'bg-primary-100'}`}>
-                        <Building2 className={`w-6 h-6 ${org.program === 'iso56002' ? 'text-emerald-600' : org.program === 'governance' ? 'text-amber-600' : 'text-primary-600'}`} />
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${org.program === 'iso56002' ? 'bg-emerald-100' : org.program === 'governance' ? 'bg-amber-100' : org.program === 'patto_di_senso' ? 'bg-purple-100' : 'bg-primary-100'}`}>
+                        <Building2 className={`w-6 h-6 ${org.program === 'iso56002' ? 'text-emerald-600' : org.program === 'governance' ? 'text-amber-600' : org.program === 'patto_di_senso' ? 'text-purple-600' : 'text-primary-600'}`} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-gray-800">{org.name}</h3>
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold tracking-wide ${
-                            org.program === 'iso56002' ? 'bg-emerald-200 text-emerald-800' : org.program === 'governance' ? 'bg-amber-200 text-amber-800' : 'bg-blue-100 text-blue-700'
+                            org.program === 'iso56002' ? 'bg-emerald-200 text-emerald-800' : org.program === 'governance' ? 'bg-amber-200 text-amber-800' : org.program === 'patto_di_senso' ? 'bg-purple-200 text-purple-800' : 'bg-blue-100 text-blue-700'
                           }`}>
-                            {org.program === 'iso56002' ? 'AUDIT 56002' : org.program === 'governance' ? 'GOVERNANCE' : 'MATURITÀ DIGITALE'}
+                            {org.program === 'iso56002' ? 'AUDIT 56002' : org.program === 'governance' ? 'GOVERNANCE' : org.program === 'patto_di_senso' ? 'PATTO DI SENSO' : 'MATURITÀ DIGITALE'}
                           </span>
                         </div>
                         <p className="text-sm text-gray-500">
@@ -1091,13 +1091,13 @@ ${staffProfiles.process_innovation_analyst}
                       {org.assessments.map((assessment) => (
                         <div 
                           key={assessment.id}
-                          className={`flex items-center justify-between p-3 rounded-lg ${org.program === 'iso56002' ? 'bg-emerald-100/60' : org.program === 'governance' ? 'bg-amber-100/60' : 'bg-gray-50'}`}
+                          className={`flex items-center justify-between p-3 rounded-lg ${org.program === 'iso56002' ? 'bg-emerald-100/60' : org.program === 'governance' ? 'bg-amber-100/60' : org.program === 'patto_di_senso' ? 'bg-purple-100/60' : 'bg-gray-50'}`}
                         >
                           <div className="flex items-center gap-3">
-                            <FileText className={`w-5 h-5 ${org.program === 'iso56002' ? 'text-emerald-500' : org.program === 'governance' ? 'text-amber-500' : 'text-gray-400'}`} />
+                            <FileText className={`w-5 h-5 ${org.program === 'iso56002' ? 'text-emerald-500' : org.program === 'governance' ? 'text-amber-500' : org.program === 'patto_di_senso' ? 'text-purple-500' : 'text-gray-400'}`} />
                             <div>
                               <p className="text-sm font-medium text-gray-700">
-                                {org.program === 'iso56002' ? 'Audit 56002' : org.program === 'governance' ? 'Assessment Governance' : ((assessment as any).level === 2 ? 'Assessment 2' : 'Assessment 1')} <span className="text-gray-400">#{assessment.id}</span>
+                                {org.program === 'iso56002' ? 'Audit 56002' : org.program === 'governance' ? 'Assessment Governance' : org.program === 'patto_di_senso' ? 'Audit Patto di Senso' : ((assessment as any).level === 2 ? 'Assessment 2' : 'Assessment 1')} <span className="text-gray-400">#{assessment.id}</span>
                               </p>
                               <p className="text-xs text-gray-500">
                                 {assessment.created_at 

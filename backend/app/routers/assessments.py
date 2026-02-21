@@ -214,6 +214,12 @@ async def submit_assessment(
             {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
             for i, q in enumerate(GOVERNANCE_QUESTIONS)
         ]
+    elif program == "patto_di_senso":
+        from app.questions_patto_di_senso_data import PATTO_DI_SENSO_QUESTIONS
+        questions_for_analysis = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(PATTO_DI_SENSO_QUESTIONS)
+        ]
     else:
         questions_for_analysis = questions_list
     

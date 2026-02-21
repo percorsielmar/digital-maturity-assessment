@@ -223,6 +223,17 @@ export const questionsGovernanceApi = {
   },
 };
 
+export const questionsPattoDiSensoApi = {
+  getQuestions: async () => {
+    const response = await api.get<{
+      questions: Question[];
+      categories: string[];
+      total: number;
+    }>('/questions-patto-di-senso/');
+    return response.data;
+  },
+};
+
 export const questionsLevel2Api = {
   getQuestions: async () => {
     const response = await api.get<{
