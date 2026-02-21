@@ -49,8 +49,8 @@ const App: React.FC = () => {
               program="patto_di_senso"
               title="Patto di Senso"
               subtitle="Audit di Maturità — Innovazione Sociale e Territoriale"
-              gradientFrom="from-purple-600"
-              gradientTo="to-purple-900"
+              gradientFrom="from-pink-500"
+              gradientTo="to-pink-900"
             />
           } />
           <Route path="/admin" element={<AdminPage />} />
