@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
     if (program === 'iso56002') navigate('/iso56002');
     else if (program === 'governance') navigate('/governance');
     else if (program === 'patto_di_senso') navigate('/patto-di-senso');
-    else navigate('/');
+    else navigate('/login-dma');
   };
 
   const handleSaveProfile = async () => {

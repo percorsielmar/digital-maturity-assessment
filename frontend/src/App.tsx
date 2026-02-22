@@ -7,6 +7,7 @@ import AssessmentPage from './components/AssessmentPage';
 import AssessmentLevel2Page from './components/AssessmentLevel2Page';
 import ReportPage from './components/ReportPage';
 import AdminPage from './components/AdminPage';
+import LandingPage from './components/LandingPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -23,7 +24,8 @@ const App: React.FC = () => {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login-dma" element={<LoginPage />} />
           <Route path="/iso56002" element={
             <LoginPage
               program="iso56002"
