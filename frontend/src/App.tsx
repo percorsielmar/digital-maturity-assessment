@@ -25,7 +25,7 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login-dma" element={<LoginPage />} />
+          <Route path="/maturita-digitale" element={<LoginPage />} />
           <Route path="/iso56002" element={
             <LoginPage
               program="iso56002"

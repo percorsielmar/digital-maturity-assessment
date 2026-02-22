@@ -33,7 +33,7 @@ const PORTALS: PortalCard[] = [
         <path d="M3 13h2v8H3zM7 9h2v12H7zM11 11h2v10h-2zM15 7h2v14h-2zM19 4h2v17h-2z" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    route: '/login-dma',
+    route: '/maturita-digitale',
     accentColor: COLORS.secondary,
     glowColor: 'rgba(0,229,229,0.4)',
   },
