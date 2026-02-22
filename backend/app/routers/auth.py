@@ -175,6 +175,11 @@ async def google_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token Google non valido: {str(e)}"
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Errore durante l'autenticazione Google: {str(e)}"
+        )
 
 class OrganizationUpdate(BaseModel):
     fiscal_code: Optional[str] = None

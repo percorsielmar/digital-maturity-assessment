@@ -65,7 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
         });
         window.google.accounts.id.renderButton(
           document.getElementById('google-signin-button'),
-          { theme: 'outline', size: 'large', width: '100%', text: 'continue_with' }
+          { theme: 'outline', size: 'large', width: 400, text: 'continue_with' }
         );
       }
     };
