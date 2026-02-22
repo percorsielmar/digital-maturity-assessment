@@ -279,6 +279,12 @@ async def regenerate_assessment_report(
             {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
             for i, q in enumerate(GOVERNANCE_QUESTIONS)
         ]
+    elif program == 'patto_di_senso':
+        from app.questions_patto_di_senso_data import PATTO_DI_SENSO_QUESTIONS
+        questions_list = [
+            {"id": i + 1, "category": q["category"], "subcategory": q.get("subcategory"), "text": q["text"], "options": q["options"], "weight": q.get("weight", 1.0)}
+            for i, q in enumerate(PATTO_DI_SENSO_QUESTIONS)
+        ]
     else:
         questions_result = await db.execute(select(Question))
         questions = questions_result.scalars().all()
@@ -356,6 +362,9 @@ async def get_assessment_responses(
     elif program == 'governance':
         from app.questions_governance_data import GOVERNANCE_QUESTIONS
         questions_map = {i + 1: q for i, q in enumerate(GOVERNANCE_QUESTIONS)}
+    elif program == 'patto_di_senso':
+        from app.questions_patto_di_senso_data import PATTO_DI_SENSO_QUESTIONS
+        questions_map = {i + 1: q for i, q in enumerate(PATTO_DI_SENSO_QUESTIONS)}
     else:
         questions_result = await db.execute(select(Question).order_by(Question.order))
         questions = questions_result.scalars().all()
@@ -374,7 +383,7 @@ async def get_assessment_responses(
         
         question = questions_map.get(q_id)
         if question:
-            if program in ('iso56002', 'governance'):
+            if program in ('iso56002', 'governance', 'patto_di_senso'):
                 options = question.get("options", []) or []
                 q_category = question.get("category", "")
                 q_subcategory = question.get("subcategory", "")
