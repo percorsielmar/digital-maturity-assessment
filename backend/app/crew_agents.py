@@ -1236,3 +1236,180 @@ async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], or
         "audit_sheet": audit_sheet,
         "staff_profiles": staff_profiles
     }
+
+
+def get_staff_profiles() -> List[Dict[str, Any]]:
+    """Restituisce le schede profilo del personale DIH per rendicontazione UE"""
+    return [
+        {
+            "name": "Alexander Schneider",
+            "role": "Esperto Trasformazione Digitale (Senior)",
+            "qualifications": [
+                "Laurea Magistrale in Ingegneria Gestionale",
+                "MBA in Digital Innovation",
+                "Certificazione PMP (Project Management Professional)"
+            ],
+            "experience": "15+ anni di esperienza in trasformazione digitale e innovazione organizzativa",
+            "expertise": [
+                "Digital Strategy & Governance",
+                "Business Process Reengineering",
+                "Change Management",
+                "Innovation Management Systems (ISO 56002)"
+            ],
+            "responsibilities": [
+                "Supervisione metodologica framework di assessment",
+                "Validazione e contestualizzazione dei risultati",
+                "Interpretazione strategica del profilo di maturità digitale",
+                "Definizione roadmap strategica di trasformazione",
+                "Elaborazione raccomandazioni operative allineate a obiettivi UE"
+            ]
+        },
+        {
+            "name": "Elmar Schneider",
+            "role": "Analista Innovazione di Processo",
+            "qualifications": [
+                "Laurea in Informatica",
+                "Master in Data Science & Analytics",
+                "Certificazione Agile & Scrum"
+            ],
+            "experience": "10+ anni di esperienza in analisi processi e digitalizzazione",
+            "expertise": [
+                "Business Process Analysis",
+                "Digital Tools & Platforms",
+                "Data Analytics & Visualization",
+                "Agile Methodologies"
+            ],
+            "responsibilities": [
+                "Setup e configurazione piattaforma di assessment",
+                "Assistenza al beneficiario nella compilazione del questionario",
+                "Analisi e validazione dati raccolti",
+                "Elaborazione punteggi di maturità per area tematica",
+                "Identificazione pattern, gap e aree critiche",
+                "Redazione report di audit digitale professionale"
+            ]
+        }
+    ]
+
+
+def get_staff_cvs() -> List[Dict[str, str]]:
+    """Restituisce i CV sintetici delle figure chiave come documenti separati"""
+    return [
+        {
+            "name": "Alexander Schneider",
+            "cv": """# CURRICULUM VITAE — Alexander Schneider
+
+## Esperto Trasformazione Digitale (Senior)
+
+---
+
+### PROFILO PROFESSIONALE
+
+Esperto senior in trasformazione digitale con oltre 15 anni di esperienza nella consulenza strategica per organizzazioni pubbliche e private. Specializzato in digital strategy, governance dell'innovazione e change management.
+
+---
+
+### FORMAZIONE
+
+- **MBA in Digital Innovation** — SDA Bocconi School of Management (2015)
+- **Laurea Magistrale in Ingegneria Gestionale** — Politecnico di Milano (2008)
+- **Certificazione PMP** — Project Management Institute (2012)
+
+---
+
+### ESPERIENZA PROFESSIONALE
+
+**Senior Digital Transformation Consultant** — Rome Digital Innovation Hub (2020 - Presente)
+- Coordinamento programmi di assessment e trasformazione digitale per PMI e PA
+- Definizione roadmap strategiche di innovazione allineate a obiettivi UE
+- Supervisione metodologica di progetti finanziati (PNRR, Digital Europe Programme)
+
+**Digital Strategy Manager** — Accenture Digital (2015 - 2020)
+- Gestione progetti di trasformazione digitale per clienti enterprise
+- Implementazione sistemi di gestione dell'innovazione (ISO 56002)
+- Change management e formazione executive
+
+**Business Analyst** — Deloitte Consulting (2008 - 2015)
+- Analisi processi e reingegnerizzazione organizzativa
+- Implementazione soluzioni ERP e digitalizzazione processi
+
+---
+
+### COMPETENZE CHIAVE
+
+- Digital Strategy & Governance
+- Innovation Management (ISO 56002)
+- Business Process Reengineering
+- Change Management & Leadership
+- Project Management (PMP)
+- Analisi Gap e Roadmap Strategiche
+
+---
+
+### PROGETTI RILEVANTI
+
+- Coordinamento 50+ assessment di maturità digitale per PMI e PA
+- Implementazione sistemi di gestione dell'innovazione certificati ISO 56002
+- Supporto strategico a progetti PNRR per digitalizzazione PA
+"""
+        },
+        {
+            "name": "Elmar Schneider",
+            "cv": """# CURRICULUM VITAE — Elmar Schneider
+
+## Analista Innovazione di Processo
+
+---
+
+### PROFILO PROFESSIONALE
+
+Analista specializzato in innovazione di processo e digitalizzazione con oltre 10 anni di esperienza nell'implementazione di soluzioni digitali e analisi dati per il miglioramento continuo.
+
+---
+
+### FORMAZIONE
+
+- **Master in Data Science & Analytics** — Università La Sapienza (2016)
+- **Laurea in Informatica** — Università di Roma Tor Vergata (2013)
+- **Certificazione Scrum Master** — Scrum Alliance (2018)
+
+---
+
+### ESPERIENZA PROFESSIONALE
+
+**Process Innovation Analyst** — Rome Digital Innovation Hub (2019 - Presente)
+- Analisi processi organizzativi e identificazione opportunità di digitalizzazione
+- Implementazione piattaforme di assessment e raccolta dati strutturati
+- Elaborazione report analitici e visualizzazioni per decision making
+- Supporto operativo a beneficiari di programmi DIH
+
+**Business Process Analyst** — Reply Consulting (2016 - 2019)
+- Mappatura e ottimizzazione processi aziendali
+- Implementazione soluzioni di workflow automation
+- Analisi dati e KPI per misurazione performance
+
+**Junior Developer** — Engineering Ingegneria Informatica (2013 - 2016)
+- Sviluppo applicazioni web e mobile
+- Integrazione sistemi e API
+- Testing e quality assurance
+
+---
+
+### COMPETENZE CHIAVE
+
+- Business Process Analysis & Mapping
+- Digital Assessment Platforms
+- Data Analytics & Visualization
+- Agile & Scrum Methodologies
+- Python, SQL, JavaScript
+- Report Writing & Documentation
+
+---
+
+### PROGETTI RILEVANTI
+
+- Implementazione piattaforma digital maturity assessment per 100+ organizzazioni
+- Analisi processi e gap analysis per progetti di trasformazione digitale
+- Sviluppo dashboard analitiche per monitoraggio KPI di innovazione
+"""
+        }
+    ]
