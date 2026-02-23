@@ -36,7 +36,8 @@ const AssessmentPage: React.FC = () => {
     phone: '',
     admin_name: '',
     sector: '',
-    size: ''
+    size: '',
+    assessment_date: ''
   });
   const answersRef = useRef<Map<number, Answer>>(new Map());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -263,12 +264,14 @@ const AssessmentPage: React.FC = () => {
     if (!id) return;
     
     if (checkMissingData()) {
+      const today = new Date().toISOString().split('T')[0];
       setMissingData({
         fiscal_code: organization?.fiscal_code || '',
         phone: organization?.phone || '',
         admin_name: organization?.admin_name || '',
         sector: organization?.sector || '',
-        size: organization?.size || ''
+        size: organization?.size || '',
+        assessment_date: today
       });
       setShowMissingDataModal(true);
       return;
@@ -283,7 +286,8 @@ const AssessmentPage: React.FC = () => {
     setSubmitting(true);
     try {
       const answersArray = Array.from(answers.values());
-      await assessmentsApi.submit(parseInt(id), answersArray);
+      const customDate = missingData.assessment_date ? new Date(missingData.assessment_date).toISOString() : undefined;
+      await assessmentsApi.submit(parseInt(id), answersArray, customDate);
       navigate(`/report/${id}`);
     } catch (error) {
       console.error('Error submitting assessment:', error);
@@ -657,6 +661,18 @@ const AssessmentPage: React.FC = () => {
                   </select>
                 </div>
               )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data di effettuazione assessment *
+                </label>
+                <input
+                  type="date"
+                  value={missingData.assessment_date}
+                  onChange={(e) => setMissingData({...missingData, assessment_date: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
             </div>
             
             <div className="p-6 border-t border-gray-100 flex gap-3">

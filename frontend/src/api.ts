@@ -104,8 +104,11 @@ export const assessmentsApi = {
     return response.data;
   },
 
-  submit: async (assessmentId: number, answers: Answer[]) => {
-    const response = await api.post<Assessment>(`/assessments/${assessmentId}/submit`, { answers });
+  submit: async (assessmentId: number, answers: Answer[], customDate?: string) => {
+    const response = await api.post<Assessment>(`/assessments/${assessmentId}/submit`, { 
+      answers,
+      custom_date: customDate 
+    });
     return response.data;
   },
   saveProgress: async (assessmentId: number, answers: Answer[]) => {

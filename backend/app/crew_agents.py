@@ -1,4 +1,27 @@
 from typing import Dict, Any, List
+from datetime import datetime
+
+def get_assessment_date(assessment_info: Dict) -> datetime:
+    """Get the date to use for assessment documents (custom_date if set, otherwise completed_at or now)"""
+    custom_date = assessment_info.get("custom_date")
+    if custom_date:
+        try:
+            if isinstance(custom_date, datetime):
+                return custom_date
+            return datetime.fromisoformat(str(custom_date).replace("Z", "+00:00"))
+        except Exception:
+            pass
+    
+    completed_at = assessment_info.get("completed_at")
+    if completed_at:
+        try:
+            if isinstance(completed_at, datetime):
+                return completed_at
+            return datetime.fromisoformat(str(completed_at).replace("Z", "+00:00"))
+        except Exception:
+            pass
+    
+    return datetime.now()
 
 def analyze_responses(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict) -> Dict[str, Any]:
     """Analyze responses without AI if no API key is available"""
@@ -158,7 +181,7 @@ def get_category_interpretation(category: str, score: float, org_type: str) -> D
         "opportunity": opportunity
     }
 
-def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera un report DIH professionale per rendicontazione UE"""
     
     org_name = organization_info.get("name", "Organizzazione")
@@ -169,11 +192,10 @@ def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
     
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
-    institutional_phrase = get_institutional_phrase(org_type)
     maturity_interpretation = get_maturity_interpretation(overall_score, org_type)
     
-    from datetime import datetime
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     
     report = f"""# AUDIT DI MATURITÀ DIGITALE
 
@@ -208,7 +230,7 @@ Il presente audit rientra nel programma di Digital Maturity Assessment erogato d
 
 {maturity_interpretation}
 
-{institutional_phrase}
+{get_institutional_phrase(org_type)}
 
 ---
 
@@ -432,218 +454,10 @@ Questo documento abilita:
 **Rome Digital Innovation Hub** in collaborazione con **Il Borgo Urbano**  
 *Programma di Trasformazione Digitale*
 
-{institutional_phrase}
+{get_institutional_phrase(org_type)}
 """
     
     return report
-
-def get_staff_profiles() -> Dict[str, str]:
-    """Restituisce le schede profilo del personale DIH"""
-    
-    digital_expert = """## DIGITAL TRANSFORMATION EXPERT (SENIOR)
-
-**Nome e Cognome:** Alexander Schneider
-**Ruolo:** Esperto in Trasformazione Digitale — Senior AI Engineer & Product Manager
-
-**Formazione Accademica:**
-- Laurea in Ingegneria — Università degli Studi Roma Tre
-
-**Esperienza Professionale:**
-- Senior AI Engineer & Product Manager presso Deloitte, specializzato in soluzioni GenAI e AI Agents
-- Esperienza consolidata nella progettazione e implementazione di soluzioni di intelligenza artificiale per la trasformazione digitale di imprese e PA
-- Competenze avanzate in architetture AI, machine learning, NLP e sistemi di automazione intelligente
-
-**Ruolo nel progetto DIH:**
-Figura senior responsabile della supervisione metodologica e della qualità degli assessment di maturità digitale. Opera come referente tecnico-strategico per la valutazione delle capacità digitali dei beneficiari.
-
-**Principali attività nel progetto:**
-- Supervisione metodologica del framework di Digital Maturity Assessment
-- Validazione e contestualizzazione dei risultati degli assessment
-- Interpretazione strategica dei profili di maturità digitale
-- Definizione delle roadmap di trasformazione
-- Elaborazione di raccomandazioni operative allineate a obiettivi UE
-- Revisione e validazione dei report di audit digitale
-
-**Competenze chiave:** Intelligenza artificiale, GenAI, AI Agents, strategia digitale, framework di maturità (CMMI, EFQM), analisi organizzativa, tecnologie digitali avanzate, programmi europei.
-
-**Valore aggiunto:** Visione tecnico-strategica di alto livello, competenze AI all'avanguardia, capacità di tradurre innovazione tecnologica in raccomandazioni operative concrete."""
-
-    process_analyst = """## PROCESS & INNOVATION ANALYST
-
-**Nome e Cognome:** Elmar Schneider
-**Ruolo:** Analista Innovazione di Processo — Innovation Manager & Digital Expert
-
-**Formazione e Certificazioni:**
-- Innovation Manager — Esperienza pluriennale nella gestione di progetti europei e bandi pubblici
-- Sviluppatore software e sistemi digitali dal 1996
-- Autore del software registrato "DAE-O" (Modulo per la creazione ed ottimizzazione di Deep Autoencoder)
-
-**Esperienza Professionale:**
-- Coordinatore e Presidente di Rete Il Borgo Urbano — partner del Tecnopolo, capoprogetto nell'ATI
-- Manager di Reti di Impresa — promozione attiva della collaborazione tra imprese per azioni win-win
-- Programmatore e sviluppatore web dalla prima ora (dal 1996): sviluppo siti internet (tra cui Malesia.it, Guadalupa.it), applicazioni mobile, e-commerce, sistemi di pagamento online, logistica integrata
-- Competenze complete in ambito digitale: programmazione DOS, HTML, sviluppo web, sistemi informatici, gestione e implementazione reti LAN, blog WordPress, suite Microsoft, Google Cloud, sviluppo con AI
-- Energy Manager — Vicepresidente di una ESCo, ha partecipato alla strutturazione del progetto Officinae Verdi (Unicredit) per la realizzazione degli Audit Energetici CFD di edifici di rilievo tra cui il Grattacielo di Milano, la sede storica di Roma (Via Tupini) e il Palazzo del Banco di Sicilia di Palermo
-- Coordinatore di un team di esperti sulle energie rinnovabili e le comunità energetiche
-- Esperienza consolidata in bandi europei e pubblici: progetti di risparmio energetico, agricoltura sostenibile, Agrisolare, PSR agricoli
-
-**Software Registrato — DAE-O:**
-Modulo per la creazione ed ottimizzazione di Deep Autoencoder (rete neurale). Il software semplifica, ottimizza e automatizza il processo di creazione di un Deep Autoencoder in grado di acquisire e comprimere dati da dataset specifici, trasformandoli in uno spazio latente a dimensionalità ridotta. Sviluppato in Python con ottimizzazione semi-Montecarlo degli iperparametri. Applicazioni: energie rinnovabili (profili pale aerogeneratori), reti elettriche, comunità energetiche, problematiche biologiche, organizzative e finanziarie.
-
-**Ruolo nel progetto DIH:**
-Figura operativa responsabile dell'analisi dettagliata dei dati raccolti e della loro elaborazione in insight strategici. Collabora con il Digital Transformation Expert per trasformare i risultati quantitativi in valutazioni qualitative.
-
-**Principali attività nel progetto:**
-- Analisi e validazione dei dati raccolti tramite piattaforma
-- Elaborazione dei punteggi di maturità per area
-- Identificazione di pattern, gap e aree critiche
-- Supporto alla redazione dei report di audit digitale
-- Mappatura dei processi organizzativi del beneficiario
-- Preparazione di materiali di sintesi e visualizzazioni
-
-**Competenze chiave:** Innovation management, data analysis, process management, sviluppo software, AI e reti neurali, energy management, gestione bandi europei, reti di impresa, e-commerce, sistemi digitali integrati.
-
-**Valore aggiunto:** Visione trasversale dall'innovazione tecnologica all'efficienza energetica, esperienza trentennale nel digitale, capacità di gestione di progetti complessi e reti collaborative."""
-
-    return {
-        "digital_transformation_expert": digital_expert,
-        "process_innovation_analyst": process_analyst
-    }
-
-
-def get_staff_cvs() -> Dict[str, str]:
-    """Restituisce i CV sintetici delle figure chiave per documentazione separata"""
-    
-    cv_alexander = """# CURRICULUM VITAE SINTETICO
-
-## Alexander Schneider
-### Esperto in Trasformazione Digitale
-
----
-
-**DATI PERSONALI**
-- **Nome e Cognome:** Alexander Schneider
-- **Sede:** Roma
-- **Ruolo attuale:** Senior AI Engineer & Product Manager — Deloitte
-
----
-
-**FORMAZIONE ACCADEMICA**
-- Laurea in Ingegneria — Università degli Studi Roma Tre, Roma
-
----
-
-**ESPERIENZA PROFESSIONALE**
-
-**Deloitte** — Senior AI Engineer & Product Manager
-- Progettazione e sviluppo di soluzioni GenAI (Generative AI) e AI Agents
-- Product management di piattaforme di intelligenza artificiale
-- Consulenza strategica per la trasformazione digitale di imprese e PA
-
----
-
-**COMPETENZE TECNICHE**
-- Intelligenza Artificiale: GenAI, AI Agents, Machine Learning, NLP
-- Architetture software e cloud computing
-- Framework di maturità digitale (CMMI, EFQM)
-- Analisi dati e business intelligence
-- Strategia digitale e innovazione tecnologica
-
----
-
-**RUOLO NEL PROGETTO DIH**
-Esperto in Trasformazione Digitale (Senior) — Responsabile della supervisione metodologica e della qualità degli assessment di maturità digitale nell'ambito del programma Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano.
-
----
-
-*Documento redatto ai fini della rendicontazione del progetto DIH — Digital Maturity Assessment*
-"""
-
-    cv_elmar = """# CURRICULUM VITAE SINTETICO
-
-## Elmar Schneider
-### Analista Innovazione di Processo — Innovation Manager
-
----
-
-**DATI PERSONALI**
-- **Nome e Cognome:** Elmar Schneider
-- **Sede:** Roma
-- **Ruolo attuale:** Coordinatore e Presidente di Rete Il Borgo Urbano
-
----
-
-**FORMAZIONE E CERTIFICAZIONI**
-- Innovation Manager — Competenze certificate nella gestione di progetti innovativi
-- Sviluppatore software e sistemi digitali dal 1996
-- Energy Manager — Vicepresidente ESCo
-- Autore software registrato "DAE-O" (Deep Autoencoder Optimization)
-
----
-
-**ESPERIENZA PROFESSIONALE**
-
-**Il Borgo Urbano** — Coordinatore e Presidente di Rete
-- Partner del Tecnopolo, capoprogetto nell'ATI
-- Coordinamento reti di impresa e promozione collaborazione inter-aziendale
-- Gestione progetti europei e bandi pubblici
-
-**Sviluppo Digitale** (dal 1996)
-- Programmazione: DOS, HTML, sviluppo web, applicazioni mobile
-- Siti internet: Malesia.it, Guadalupa.it e altri progetti web
-- E-commerce: sistemi di pagamento online, logistica integrata
-- Sistemi informatici: gestione e implementazione reti LAN
-- CMS e blog: WordPress, suite Microsoft, Google Cloud
-- Sviluppo con AI: progetti di intelligenza artificiale applicata
-
-**Energy Management**
-- Vicepresidente ESCo — gestione efficienza energetica
-- Progetto Officinae Verdi (Unicredit): Audit Energetici CFD
-  - Grattacielo di Milano (sede storica)
-  - Sede Roma — Via Tupini
-  - Palazzo del Banco di Sicilia — Palermo
-- Coordinamento team esperti energie rinnovabili e comunità energetiche
-
-**Bandi e Progetti Pubblici**
-- Progetti europei di innovazione e trasformazione digitale
-- Bandi risparmio energetico e agricoltura sostenibile
-- Agrisolare, PSR agricoli e altri bandi pubblici
-
----
-
-**SOFTWARE REGISTRATO**
-
-**DAE-O — Deep Autoencoder Optimization**
-Modulo Python per la creazione ed ottimizzazione di Deep Autoencoder (rete neurale). Il software semplifica e automatizza la creazione di reti neurali per la compressione e generazione sintetica di dati. Utilizza ottimizzazione semi-Montecarlo degli iperparametri (layer, nodi, patience) con funzione obiettivo MSE.
-
-Applicazioni: profili pale aerogeneratori, reti elettriche e comunità energetiche, problematiche biologiche, organizzative e finanziarie.
-
----
-
-**COMPETENZE CHIAVE**
-- Innovation management e gestione progetti complessi
-- Sviluppo software e sistemi digitali (30+ anni)
-- AI e reti neurali (Deep Autoencoder)
-- Energy management e audit energetici
-- E-commerce e pagamenti digitali
-- Gestione bandi europei e pubblici
-- Reti di impresa e collaborazione inter-aziendale
-
----
-
-**RUOLO NEL PROGETTO DIH**
-Analista Innovazione di Processo — Responsabile dell'analisi dei dati e dell'elaborazione di insight strategici nell'ambito del programma Rome Digital Innovation Hub in collaborazione con Il Borgo Urbano.
-
----
-
-*Documento redatto ai fini della rendicontazione del progetto DIH — Digital Maturity Assessment*
-"""
-
-    return {
-        "alexander_schneider": cv_alexander,
-        "elmar_schneider": cv_elmar
-    }
-
 
 def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
     """Genera il foglio ore per un assessment specifico"""
@@ -651,19 +465,9 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
     
     org_name = organization_info.get("name", "Organizzazione")
     assessment_id = assessment_info.get("id", "N/A")
-    completed_at = assessment_info.get("completed_at", "")
-    
-    if completed_at:
-        try:
-            dt = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
-            date_str = dt.strftime("%d/%m/%Y")
-            month_str = dt.strftime("%B %Y")
-        except Exception:
-            date_str = completed_at
-            month_str = ""
-    else:
-        date_str = datetime.now().strftime("%d/%m/%Y")
-        month_str = datetime.now().strftime("%B %Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
+    month_str = assessment_date.strftime("%B %Y")
     
     timesheet = f"""# FOGLIO ORE — DIGITAL MATURITY ASSESSMENT
 
@@ -684,14 +488,14 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 
 | Data | Attività | Ore |
 |------|----------|-----|
-| {date_str} | Analisi preliminare contesto organizzativo del beneficiario | 2.0 |
-| {date_str} | Supervisione metodologica framework di assessment | 2.0 |
-| {date_str} | Validazione e contestualizzazione dei risultati | 3.0 |
-| {date_str} | Interpretazione strategica del profilo di maturità digitale | 2.5 |
-| {date_str} | Definizione roadmap strategica di trasformazione | 3.0 |
-| {date_str} | Elaborazione raccomandazioni operative allineate a obiettivi UE | 2.5 |
-| {date_str} | Revisione e validazione report di audit digitale | 2.0 |
-| {date_str} | Coordinamento e quality assurance documentazione | 1.0 |
+| {current_date} | Analisi preliminare contesto organizzativo del beneficiario | 2.0 |
+| {current_date} | Supervisione metodologica framework di assessment | 2.0 |
+| {current_date} | Validazione e contestualizzazione dei risultati | 3.0 |
+| {current_date} | Interpretazione strategica del profilo di maturità digitale | 2.5 |
+| {current_date} | Definizione roadmap strategica di trasformazione | 3.0 |
+| {current_date} | Elaborazione raccomandazioni operative allineate a obiettivi UE | 2.5 |
+| {current_date} | Revisione e validazione report di audit digitale | 2.0 |
+| {current_date} | Coordinamento e quality assurance documentazione | 1.0 |
 | | **TOTALE ORE** | **18.0** |
 | | **IMPORTO** | **4.500,00 €** |
 
@@ -701,15 +505,15 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 
 | Data | Attività | Ore |
 |------|----------|-----|
-| {date_str} | Setup e configurazione piattaforma di assessment | 2.0 |
-| {date_str} | Assistenza al beneficiario nella compilazione del questionario | 3.0 |
-| {date_str} | Analisi e validazione dati raccolti tramite piattaforma | 3.0 |
-| {date_str} | Elaborazione punteggi di maturità per area tematica | 2.0 |
-| {date_str} | Identificazione pattern, gap e aree critiche | 3.0 |
-| {date_str} | Redazione report di audit digitale professionale | 3.0 |
-| {date_str} | Mappatura processi organizzativi del beneficiario | 2.5 |
-| {date_str} | Preparazione materiali di sintesi e visualizzazioni | 2.0 |
-| {date_str} | Documentazione, archiviazione e chiusura pratica | 1.5 |
+| {current_date} | Setup e configurazione piattaforma di assessment | 2.0 |
+| {current_date} | Assistenza al beneficiario nella compilazione del questionario | 3.0 |
+| {current_date} | Analisi e validazione dati raccolti tramite piattaforma | 3.0 |
+| {current_date} | Elaborazione punteggi di maturità per area tematica | 2.0 |
+| {current_date} | Identificazione pattern, gap e aree critiche | 3.0 |
+| {current_date} | Redazione report di audit digitale professionale | 3.0 |
+| {current_date} | Mappatura processi organizzativi del beneficiario | 2.5 |
+| {current_date} | Preparazione materiali di sintesi e visualizzazioni | 2.0 |
+| {current_date} | Documentazione, archiviazione e chiusura pratica | 1.5 |
 | | **TOTALE ORE** | **22.0** |
 | | **IMPORTO** | **5.500,00 €** |
 
@@ -739,7 +543,7 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 
 **Firma Beneficiario:** ____________________________
 
-**Data:** {date_str}
+**Data:** {current_date}
 
 ---
 
@@ -747,18 +551,16 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
 """
     return timesheet
 
-
-def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera la Scheda di Audit per rendicontazione UE (max 1 pagina)"""
-    
-    from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
     org_type = organization_info.get("type", "azienda")
     org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
     
-    current_date = datetime.now().strftime("%d/%m/%Y")
-    current_month = datetime.now().strftime("%B %Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
+    current_month = assessment_date.strftime("%B %Y")
     
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
@@ -832,16 +634,13 @@ L'assessment fornisce al beneficiario una fotografia oggettiva e misurabile del 
     
     return sheet
 
-
-def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'audit propedeutico alla certificazione UNI/PdR 56002"""
     from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
-    org_type = organization_info.get("type", "azienda")
-    org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
-    
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})
@@ -874,7 +673,6 @@ def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict) 
 ---
 
 **Organizzazione:** {org_name}
-**Tipologia:** {org_type_label}
 **Data assessment:** {current_date}
 
 ---
@@ -926,7 +724,7 @@ La seguente analisi identifica le aree in cui l'organizzazione presenta i gap pi
     report += "\n### Azioni di consolidamento (gap 1-2):\n"
     if medium_gaps:
         for cat in medium_gaps:
-            report += f"- **{cat}**: Rafforzamento necessario. Migliorare le pratiche esistenti e formalizzare i processi.\n"
+            report += f"- **{cat}**: Rafforzamento delle pratiche esistenti e formalizzazione dei processi.\n"
     else:
         report += "- Nessuna area con gap medio.\n"
     
@@ -980,13 +778,13 @@ L'assessment è stato realizzato da esperti in innovazione e trasformazione digi
 """
     return report
 
-
-def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'assessment di Governance Trasparente"""
     from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})
@@ -1030,22 +828,62 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 **Livello di governance:** {gov_level}
 
+### Le Quattro Macro-Aree Valutate
+
+| Macro-Area | Domande | Descrizione |
+|------------|---------|-------------|
+| **Governance e Trasparenza** | 27 | Meccanismi decisionali etici, conformità normativa, coinvolgimento stakeholder |
+| **Innovazione Tecnologica** | 27 | Adozione tecnologie emergenti (IA, Blockchain, IoT), cybersecurity, competenze digitali |
+| **Sostenibilità Ambientale** | 27 | Impatto ambientale, efficienza energetica, allineamento SDGs ONU |
+| **Valore Sociale ed Economico** | 27 | Impatto territoriale, inclusione, welfare, sostenibilità della filiera |
+
 ---
 
-## 2. PUNTEGGI PER AREA TEMATICA
+## 2. INQUADRAMENTO METODOLOGICO
+
+### Framework del Patto di Senso
+
+L'assessment si basa su **108 domande** strutturate in 4 macro-aree da 27 domande ciascuna, con risposte su scala 1-5. Il framework valuta la capacità dell'organizzazione di:
+
+- **Governare con trasparenza** — Decisioni etiche, partecipative e verificabili
+- **Innovare con responsabilità** — Tecnologie emergenti al servizio del bene comune
+- **Sostenere l'ambiente** — Impegno concreto verso gli SDGs e la neutralità climatica
+- **Generare valore condiviso** — Impatto positivo su territorio, comunità e filiera
+
+### Scala di Maturità
+
+| Livello | Punteggio | Idoneità Patto di Senso |
+|---------|-----------|------------------------|
+| Iniziale | 1.0 - 1.9 | Non idoneo — Interventi strutturali necessari |
+| Gestito | 2.0 - 2.9 | Parzialmente idoneo — Piano di adeguamento richiesto |
+| Definito | 3.0 - 3.9 | Idoneo con riserva — Miglioramenti specifici necessari |
+| Avanzato | 4.0 - 4.4 | Idoneo — Pronto per l'implementazione |
+| Ottimizzato | 4.5 - 5.0 | Eccellente — Modello di riferimento |
+
+### Collegamento con Smart Contract e Tokenomics
+
+Il Patto di Senso prevede che gli impegni emersi dall'audit vengano tradotti in:
+- **Smart Contract su blockchain binaria** — Condizioni verificabili (vero/falso)
+- **Token A3** — Per la governance distribuita e il voto sulle proposte
+- **Token L3** — Per premiare l'impatto generato e i comportamenti virtuosi
+
+---
+
+## 3. PROFILO DI MATURITÀ PER MACRO-AREA
 
 {scores_text}
 
 ---
 
-## 3. GAP ANALYSIS
+## 4. GAP ANALYSIS
 
-| Area | Punteggio | Gap | Priorità |
-|------|-----------|-----|----------|
+| Macro-Area | Punteggio | Gap | Priorità |
+|------------|-----------|-----|----------|
 """
     
     for category, info in gap_analysis.items():
-        report += f"| {category} | {info.get('current_score', 0)}/5 | {info.get('gap', 0)} | {info.get('priority', 'N/A')} |\n"
+        priority_icon = "🔴" if info.get("priority") == "Alta" else "🟡" if info.get("priority") == "Media" else "🟢"
+        report += f"| {category} | {info.get('current_score', 0)}/5 | {info.get('gap', 0)} | {priority_icon} {info.get('priority', 'N/A')} |\n"
     
     high_gaps = {k: v for k, v in gap_analysis.items() if v.get("gap", 0) > 2}
     medium_gaps = {k: v for k, v in gap_analysis.items() if 1 < v.get("gap", 0) <= 2}
@@ -1055,27 +893,27 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 ---
 
-## 4. RACCOMANDAZIONI OPERATIVE
+## 5. RACCOMANDAZIONI PER L'ADESIONE AL PATTO DI SENSO
 
 ### Interventi prioritari (gap > 2):
 """
     if high_gaps:
         for cat in high_gaps:
-            report += f"- **{cat}**: Intervento strutturale necessario per raggiungere standard adeguati di governance trasparente.\n"
+            report += f"- **{cat}**: Intervento strutturale necessario. Definire un piano d'azione con tempistiche, responsabili e KPI misurabili.\n"
     else:
         report += "- Nessuna area con gap critico.\n"
     
-    report += "\n### Interventi di rafforzamento (gap 1-2):\n"
+    report += "\n### Interventi di consolidamento (gap 1-2):\n"
     if medium_gaps:
         for cat in medium_gaps:
-            report += f"- **{cat}**: Consolidamento delle pratiche esistenti e introduzione di strumenti avanzati.\n"
+            report += f"- **{cat}**: Rafforzamento delle pratiche esistenti e formalizzazione dei processi.\n"
     else:
         report += "- Nessuna area con gap medio.\n"
     
     report += "\n### Aree di eccellenza (gap < 1):\n"
     if low_gaps:
         for cat in low_gaps:
-            report += f"- **{cat}**: Mantenere il livello raggiunto, condividere le best practice con altri enti.\n"
+            report += f"- **{cat}**: Mantenere il livello raggiunto e condividere le best practice.\n"
     else:
         report += "- Nessuna area al livello di eccellenza.\n"
     
@@ -1083,68 +921,53 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 ---
 
-## 5. PERCORSO FORMATIVO E CONSULENZIALE
+## 6. ROADMAP VERSO IL PATTO DI SENSO
 
-Il servizio prevede un percorso articolato in **5 giornate complessive**:
+### Fase 1 — Audit e Pianificazione (0-3 mesi)
+- Approfondimento delle aree con gap critico
+- Definizione della politica di sostenibilità e governance etica
+- Mappatura degli stakeholder e piano di coinvolgimento
+- Identificazione degli SDG prioritari
 
-### Giornate in presenza (3 × 4 ore = 12 ore)
+### Fase 2 — Implementazione (3-9 mesi)
+- Implementazione delle azioni correttive per le aree critiche
+- Adozione di tecnologie emergenti (IA, blockchain) dove applicabile
+- Formazione del personale su etica, sostenibilità e innovazione
+- Avvio dei processi di stakeholder engagement
 
-**Giornata 1 — Trasparenza e tracciabilità**
-- Quadro normativo: D.Lgs. 33/2013, FOIA, L. 190/2012, CAD
-- Strumenti digitali per la trasparenza amministrativa
-- Open data e pubblicazione proattiva
-- Esercitazione pratica: analisi della sezione Amministrazione Trasparente
+### Fase 3 — Codifica nel Patto (9-12 mesi)
+- Traduzione degli impegni in clausole verificabili (Legal Engineering)
+- Implementazione dello Smart Contract su blockchain binaria
+- Definizione dei KPI monitorabili tramite oracoli digitali e IoT
+- Attivazione del sistema di tokenomics (Token A3 e L3)
 
-**Giornata 2 — Partecipazione e co-progettazione**
-- Strumenti digitali per la partecipazione dei cittadini
-- Consultazioni pubbliche e bilancio partecipativo
-- Monitoraggio civico e accountability
-- Laboratorio: progettazione di un processo partecipativo
+### Fase 4 — Monitoraggio e Miglioramento Continuo (12+ mesi)
+- Monitoraggio automatizzato tramite oracoli e sensori
+- Verifica periodica delle condizioni dello Smart Contract
+- Distribuzione incentivi per obiettivi raggiunti
+- Riesame e aggiornamento del Patto
 
-**Giornata 3 — Governance digitale e conformità PNRR**
-- Piattaforme digitali per la governance (SPID, pagoPA, IO, PDND)
-- Principi PNRR: parità di genere, DNSH, inclusione
-- Gestione finanziaria e prevenzione doppio finanziamento
-- Piano di miglioramento personalizzato
-
-### Sessioni online (2 × 2 ore = 4 ore)
-
-**Sessione 1 — Analisi delle pratiche esistenti**
-- Revisione degli strumenti e processi attuali dell'ente
-- Identificazione delle aree di miglioramento prioritarie
-- Definizione degli obiettivi del percorso
-
-**Sessione 2 — Follow-up e piano operativo**
-- Verifica dell'avanzamento delle azioni concordate
-- Supporto all'implementazione degli strumenti
-- Definizione del piano operativo di miglioramento
-
-### Attività asincrone
-- Analisi documentale delle pratiche dell'ente
-- Redazione del report operativo con raccomandazioni
-- Supporto a distanza per l'implementazione
+**Tempistica stimata complessiva:** 12-18 mesi
 
 ---
 
-## 6. CONFORMITÀ AI PRINCIPI PNRR
+## 7. ALLINEAMENTO STRATEGICO
 
-Il presente servizio è erogato nel rispetto dei seguenti principi:
+### Coerenza con il Framework del Patto di Senso
 
-- **Sana gestione finanziaria** — Reg. (UE, Euratom) 2018/1046 e art. 22 Reg. (UE) 2021/241
-- **Prevenzione conflitti di interessi, frodi e corruzione**
-- **Assenza doppio finanziamento**
-- **Parità di genere** — Protezione e valorizzazione dei giovani
-- **Superamento divari territoriali** — Inclusione lavorativa persone con disabilità
-- **Principio DNSH** — Art. 17 Reg. (UE) 2020/852, non arrecare danno significativo agli obiettivi ambientali
-- **Conformità normativa** — Rispetto della normativa nazionale ed europea applicabile
+L'assessment è allineato ai pilastri fondamentali del modello:
 
----
+- **Transizione Digitale ed Etica** — IA, blockchain e IoT con approccio human-centric (Rome Call for AI Ethics)
+- **Sostenibilità Integrale** — Allineamento agli SDGs dell'Agenda 2030 ONU
+- **IA come Oracolo Digitale** — Facilitatore analitico e predittivo a supporto delle decisioni umane
+- **Sensers e Oracolo di Senso** — Sistema collaborativo esperti-comunità per orientare la tecnologia al bene comune
 
-## 7. NOTE METODOLOGICHE
+### Coerenza con Obiettivi UE e Nazionali
 
-L'assessment è stato condotto utilizzando un questionario strutturato basato sui principi di governance trasparente, partecipazione dei cittadini e conformità normativa. La valutazione copre 7 aree tematiche con 21 domande a risposta multipla pesata.
-
-L'assessment è stato realizzato da esperti in governance digitale e innovazione della PA, assicurando un'analisi contestualizzata e l'elaborazione di raccomandazioni operative orientate al rafforzamento della trasparenza e della partecipazione.
+- **European Green Deal** — Neutralità climatica e economia circolare
+- **Digital Europe Programme** — Rafforzamento capacità digitali
+- **PNRR** — Digitalizzazione, sostenibilità e inclusione
+- **Strategia Nazionale per lo Sviluppo Sostenibile** — Agenda 2030
 
 ---
 
@@ -1153,17 +976,15 @@ L'assessment è stato realizzato da esperti in governance digitale e innovazione
     return report
 
 
-def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'Audit di Maturità del Patto di Senso"""
-    from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
-    org_type = organization_info.get("type", "azienda")
-    org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
     sector = organization_info.get("sector", "Non specificato")
     size = organization_info.get("size", "Non specificata")
     
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})
@@ -1383,23 +1204,26 @@ L'assessment è stato realizzato da esperti in innovazione sociale, governance e
     return report
 
 
-async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict, program: str = "dma") -> Dict[str, Any]:
+async def run_crew_analysis(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict, program: str = "dma", assessment_info: Dict = None) -> Dict[str, Any]:
     """Run the analysis pipeline with algorithmic scoring"""
     
     analysis = analyze_responses(responses, questions, organization_info)
     
+    if assessment_info is None:
+        assessment_info = {}
+    
     if program == "iso56002":
-        report = generate_iso56002_report(analysis, organization_info)
-        audit_sheet = generate_audit_sheet(analysis, organization_info)
+        report = generate_iso56002_report(analysis, organization_info, assessment_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info, assessment_info)
     elif program == "governance":
-        report = generate_governance_report(analysis, organization_info)
-        audit_sheet = generate_audit_sheet(analysis, organization_info)
+        report = generate_governance_report(analysis, organization_info, assessment_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info, assessment_info)
     elif program == "patto_di_senso":
-        report = generate_patto_di_senso_report(analysis, organization_info)
-        audit_sheet = generate_audit_sheet(analysis, organization_info)
+        report = generate_patto_di_senso_report(analysis, organization_info, assessment_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info, assessment_info)
     else:
-        report = generate_report(analysis, organization_info)
-        audit_sheet = generate_audit_sheet(analysis, organization_info)
+        report = generate_report(analysis, organization_info, assessment_info)
+        audit_sheet = generate_audit_sheet(analysis, organization_info, assessment_info)
     
     staff_profiles = get_staff_profiles()
     

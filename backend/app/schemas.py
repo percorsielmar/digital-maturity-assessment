@@ -64,6 +64,7 @@ class AnswerSubmit(BaseModel):
 
 class AssessmentSubmit(BaseModel):
     answers: List[AnswerSubmit]
+    custom_date: Optional[str] = None
 
 class AssessmentResponse(BaseModel):
     id: int
@@ -78,6 +79,7 @@ class AssessmentResponse(BaseModel):
     responses: Optional[Dict[str, Any]]
     created_at: datetime
     completed_at: Optional[datetime]
+    custom_date: Optional[datetime]
     
     class Config:
         from_attributes = True

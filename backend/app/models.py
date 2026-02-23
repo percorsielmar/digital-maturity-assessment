@@ -38,6 +38,7 @@ class Assessment(Base):
     maturity_level = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
+    custom_date = Column(DateTime)
     
     organization = relationship("Organization", back_populates="assessments")
 

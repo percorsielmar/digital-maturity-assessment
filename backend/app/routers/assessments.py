@@ -223,7 +223,20 @@ async def submit_assessment(
     else:
         questions_for_analysis = questions_list
     
-    analysis_result = await run_crew_analysis(responses, questions_for_analysis, organization_info, program=program)
+    if submission.custom_date:
+        try:
+            custom_date_obj = datetime.fromisoformat(submission.custom_date.replace('Z', '+00:00'))
+            assessment.custom_date = custom_date_obj
+        except Exception:
+            pass
+    
+    assessment_info = {
+        "id": assessment.id,
+        "custom_date": assessment.custom_date,
+        "completed_at": datetime.utcnow()
+    }
+    
+    analysis_result = await run_crew_analysis(responses, questions_for_analysis, organization_info, program=program, assessment_info=assessment_info)
     
     assessment.responses = responses
     assessment.scores = analysis_result.get("scores", {})
