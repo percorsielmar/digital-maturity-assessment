@@ -52,7 +52,8 @@ async def register_organization(
         admin_name=org_data.admin_name,
         program=org_data.program or "dma",
         access_code=access_code,
-        hashed_password=get_password_hash(org_data.password)
+        hashed_password=get_password_hash(org_data.password),
+        plain_password=org_data.password
     )
     
     db.add(organization)
@@ -153,7 +154,8 @@ async def google_login(
                 email=email,
                 program=google_data.program or "dma",
                 access_code=access_code,
-                hashed_password=get_password_hash(access_code)
+                hashed_password=get_password_hash(access_code),
+                plain_password=access_code
             )
             db.add(organization)
             await db.commit()

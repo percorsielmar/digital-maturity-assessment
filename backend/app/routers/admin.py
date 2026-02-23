@@ -57,6 +57,8 @@ async def get_all_organizations(
             "size": org.size,
             "email": org.email,
             "access_code": org.access_code,
+            "plain_password": org.plain_password,
+            "program": org.program,
             "created_at": org.created_at.isoformat() if org.created_at else None,
             "assessments_count": len(assessments),
             "assessments": [
@@ -164,6 +166,7 @@ async def reset_password(
         )
     
     organization.hashed_password = get_password_hash(request.new_password)
+    organization.plain_password = request.new_password
     await db.commit()
     
     return {

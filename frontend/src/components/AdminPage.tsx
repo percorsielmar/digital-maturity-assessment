@@ -44,6 +44,7 @@ interface Organization {
   email: string | null;
   program: string | null;
   access_code: string;
+  plain_password: string | null;
   created_at: string | null;
   assessments_count: number;
   assessments: Assessment[];
@@ -1056,6 +1057,9 @@ ${staffProfiles.process_innovation_analyst}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           Codice: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{org.access_code}</span>
+                          {org.plain_password && (
+                            <> • Password: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{org.plain_password}</span></>
+                          )}
                           {org.email && ` • ${org.email}`}
                         </p>
                       </div>

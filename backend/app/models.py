@@ -13,6 +13,7 @@ class Organization(Base):
     size = Column(String(50))
     access_code = Column(String(100), unique=True, index=True)
     hashed_password = Column(String(255))
+    plain_password = Column(String(255))  # Password in chiaro per admin panel
     email = Column(String(255))
     fiscal_code = Column(String(50))  # Codice Fiscale / Partita IVA
     phone = Column(String(50))  # Numero di telefono
