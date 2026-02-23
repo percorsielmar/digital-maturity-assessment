@@ -1,4 +1,23 @@
 from typing import Dict, Any, List
+from datetime import datetime
+
+def get_assessment_date(assessment_info: Dict) -> datetime:
+    """Get the date to use for assessment documents (custom_date if set, otherwise completed_at or now)"""
+    custom_date = assessment_info.get("custom_date")
+    if custom_date:
+        try:
+            return datetime.fromisoformat(custom_date.replace("Z", "+00:00"))
+        except Exception:
+            pass
+    
+    completed_at = assessment_info.get("completed_at")
+    if completed_at:
+        try:
+            return datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+        except Exception:
+            pass
+    
+    return datetime.now()
 
 def analyze_responses(responses: Dict[str, Any], questions: List[Dict], organization_info: Dict) -> Dict[str, Any]:
     """Analyze responses without AI if no API key is available"""
@@ -158,7 +177,7 @@ def get_category_interpretation(category: str, score: float, org_type: str) -> D
         "opportunity": opportunity
     }
 
-def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera un report DIH professionale per rendicontazione UE"""
     
     org_name = organization_info.get("name", "Organizzazione")
@@ -169,11 +188,13 @@ def generate_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
     
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
-    institutional_phrase = get_institutional_phrase(org_type)
+    scores = analysis.get("scores", {})
+    gap_analysis = analysis.get("gap_analysis", {})
+    
     maturity_interpretation = get_maturity_interpretation(overall_score, org_type)
     
-    from datetime import datetime
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     
     report = f"""# AUDIT DI MATURITÀ DIGITALE
 
@@ -748,17 +769,16 @@ def generate_timesheet(assessment_info: Dict, organization_info: Dict) -> str:
     return timesheet
 
 
-def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_audit_sheet(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera la Scheda di Audit per rendicontazione UE (max 1 pagina)"""
-    
-    from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
     org_type = organization_info.get("type", "azienda")
     org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
     
-    current_date = datetime.now().strftime("%d/%m/%Y")
-    current_month = datetime.now().strftime("%B %Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
+    current_month = assessment_date.strftime("%B %Y")
     
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
@@ -833,7 +853,7 @@ L'assessment fornisce al beneficiario una fotografia oggettiva e misurabile del 
     return sheet
 
 
-def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'audit propedeutico alla certificazione UNI/PdR 56002"""
     from datetime import datetime
     
@@ -841,7 +861,8 @@ def generate_iso56002_report(analysis: Dict[str, Any], organization_info: Dict) 
     org_type = organization_info.get("type", "azienda")
     org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
     
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})
@@ -981,12 +1002,16 @@ L'assessment è stato realizzato da esperti in innovazione e trasformazione digi
     return report
 
 
-def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'assessment di Governance Trasparente"""
     from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    org_type = organization_info.get("type", "azienda")
+    org_type_label = "Pubblica Amministrazione" if org_type == "pa" else "Impresa"
+    
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})
@@ -1030,18 +1055,57 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 **Livello di governance:** {gov_level}
 
+### Le Quattro Macro-Aree Valutate
+
+| Macro-Area | Domande | Descrizione |
+|------------|---------|-------------|
+| **Governance e Trasparenza** | 27 | Meccanismi decisionali etici, conformità normativa, coinvolgimento stakeholder |
+| **Innovazione Tecnologica** | 27 | Adozione tecnologie emergenti (IA, Blockchain, IoT), cybersecurity, competenze digitali |
+| **Sostenibilità Ambientale** | 27 | Impatto ambientale, efficienza energetica, allineamento SDGs ONU |
+| **Valore Sociale ed Economico** | 27 | Impatto territoriale, inclusione, welfare, sostenibilità della filiera |
+
 ---
 
-## 2. PUNTEGGI PER AREA TEMATICA
+## 2. INQUADRAMENTO METODOLOGICO
+
+### Framework del Patto di Senso
+
+L'audit si basa su **108 domande** strutturate in 4 macro-aree da 27 domande ciascuna, con risposte su scala 1-5. Il framework valuta la capacità dell'organizzazione di:
+
+- **Governare con trasparenza** — Decisioni etiche, partecipative e verificabili
+- **Innovare con responsabilità** — Tecnologie emergenti al servizio del bene comune
+- **Sostenere l'ambiente** — Impegno concreto verso gli SDGs e la neutralità climatica
+- **Generare valore condiviso** — Impatto positivo su territorio, comunità e filiera
+
+### Scala di Maturità
+
+| Livello | Punteggio | Idoneità Patto di Senso |
+|---------|-----------|------------------------|
+| Iniziale | 1.0 - 1.9 | Non idoneo — Interventi strutturali necessari |
+| Gestito | 2.0 - 2.9 | Parzialmente idoneo — Piano di adeguamento richiesto |
+| Definito | 3.0 - 3.9 | Idoneo con riserva — Miglioramenti specifici necessari |
+| Avanzato | 4.0 - 4.4 | Idoneo — Pronto per l'implementazione |
+| Ottimizzato | 4.5 - 5.0 | Eccellente — Modello di riferimento |
+
+### Collegamento con Smart Contract e Tokenomics
+
+Il Patto di Senso prevede che gli impegni emersi dall'audit vengano tradotti in:
+- **Smart Contract su blockchain binaria** — Condizioni verificabili (vero/falso)
+- **Token A3** — Per la governance distribuita e il voto sulle proposte
+- **Token L3** — Per premiare l'impatto generato e i comportamenti virtuosi
+
+---
+
+## 3. PROFILO DI MATURITÀ PER MACRO-AREA
 
 {scores_text}
 
 ---
 
-## 3. GAP ANALYSIS
+## 4. GAP ANALYSIS
 
-| Area | Punteggio | Gap | Priorità |
-|------|-----------|-----|----------|
+| Macro-Area | Punteggio | Gap | Priorità |
+|------------|-----------|-----|----------|
 """
     
     for category, info in gap_analysis.items():
@@ -1055,27 +1119,27 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 ---
 
-## 4. RACCOMANDAZIONI OPERATIVE
+## 5. RACCOMANDAZIONI PER L'ADESIONE AL PATTO DI SENSO
 
 ### Interventi prioritari (gap > 2):
 """
     if high_gaps:
         for cat in high_gaps:
-            report += f"- **{cat}**: Intervento strutturale necessario per raggiungere standard adeguati di governance trasparente.\n"
+            report += f"- **{cat}**: Intervento strutturale necessario. Definire un piano d'azione con tempistiche, responsabili e KPI misurabili.\n"
     else:
         report += "- Nessuna area con gap critico.\n"
     
-    report += "\n### Interventi di rafforzamento (gap 1-2):\n"
+    report += "\n### Interventi di consolidamento (gap 1-2):\n"
     if medium_gaps:
         for cat in medium_gaps:
-            report += f"- **{cat}**: Consolidamento delle pratiche esistenti e introduzione di strumenti avanzati.\n"
+            report += f"- **{cat}**: Rafforzamento delle pratiche esistenti e formalizzazione dei processi.\n"
     else:
         report += "- Nessuna area con gap medio.\n"
     
     report += "\n### Aree di eccellenza (gap < 1):\n"
     if low_gaps:
         for cat in low_gaps:
-            report += f"- **{cat}**: Mantenere il livello raggiunto, condividere le best practice con altri enti.\n"
+            report += f"- **{cat}**: Mantenere il livello raggiunto e condividere le best practice.\n"
     else:
         report += "- Nessuna area al livello di eccellenza.\n"
     
@@ -1083,68 +1147,53 @@ def generate_governance_report(analysis: Dict[str, Any], organization_info: Dict
 
 ---
 
-## 5. PERCORSO FORMATIVO E CONSULENZIALE
+## 6. ROADMAP VERSO IL PATTO DI SENSO
 
-Il servizio prevede un percorso articolato in **5 giornate complessive**:
+### Fase 1 — Audit e Pianificazione (0-3 mesi)
+- Approfondimento delle aree con gap critico
+- Definizione della politica di sostenibilità e governance etica
+- Mappatura degli stakeholder e piano di coinvolgimento
+- Identificazione degli SDG prioritari
 
-### Giornate in presenza (3 × 4 ore = 12 ore)
+### Fase 2 — Implementazione (3-9 mesi)
+- Implementazione delle azioni correttive per le aree critiche
+- Adozione di tecnologie emergenti (IA, blockchain) dove applicabile
+- Formazione del personale su etica, sostenibilità e innovazione
+- Avvio dei processi di stakeholder engagement
 
-**Giornata 1 — Trasparenza e tracciabilità**
-- Quadro normativo: D.Lgs. 33/2013, FOIA, L. 190/2012, CAD
-- Strumenti digitali per la trasparenza amministrativa
-- Open data e pubblicazione proattiva
-- Esercitazione pratica: analisi della sezione Amministrazione Trasparente
+### Fase 3 — Codifica nel Patto (9-12 mesi)
+- Traduzione degli impegni in clausole verificabili (Legal Engineering)
+- Implementazione dello Smart Contract su blockchain binaria
+- Definizione dei KPI monitorabili tramite oracoli digitali e IoT
+- Attivazione del sistema di tokenomics (Token A3 e L3)
 
-**Giornata 2 — Partecipazione e co-progettazione**
-- Strumenti digitali per la partecipazione dei cittadini
-- Consultazioni pubbliche e bilancio partecipativo
-- Monitoraggio civico e accountability
-- Laboratorio: progettazione di un processo partecipativo
+### Fase 4 — Monitoraggio e Miglioramento Continuo (12+ mesi)
+- Monitoraggio automatizzato tramite oracoli e sensori
+- Verifica periodica delle condizioni dello Smart Contract
+- Distribuzione incentivi per obiettivi raggiunti
+- Riesame e aggiornamento del Patto
 
-**Giornata 3 — Governance digitale e conformità PNRR**
-- Piattaforme digitali per la governance (SPID, pagoPA, IO, PDND)
-- Principi PNRR: parità di genere, DNSH, inclusione
-- Gestione finanziaria e prevenzione doppio finanziamento
-- Piano di miglioramento personalizzato
-
-### Sessioni online (2 × 2 ore = 4 ore)
-
-**Sessione 1 — Analisi delle pratiche esistenti**
-- Revisione degli strumenti e processi attuali dell'ente
-- Identificazione delle aree di miglioramento prioritarie
-- Definizione degli obiettivi del percorso
-
-**Sessione 2 — Follow-up e piano operativo**
-- Verifica dell'avanzamento delle azioni concordate
-- Supporto all'implementazione degli strumenti
-- Definizione del piano operativo di miglioramento
-
-### Attività asincrone
-- Analisi documentale delle pratiche dell'ente
-- Redazione del report operativo con raccomandazioni
-- Supporto a distanza per l'implementazione
+**Tempistica stimata complessiva:** 12-18 mesi
 
 ---
 
-## 6. CONFORMITÀ AI PRINCIPI PNRR
+## 7. ALLINEAMENTO STRATEGICO
 
-Il presente servizio è erogato nel rispetto dei seguenti principi:
+### Coerenza con il Framework del Patto di Senso
 
-- **Sana gestione finanziaria** — Reg. (UE, Euratom) 2018/1046 e art. 22 Reg. (UE) 2021/241
-- **Prevenzione conflitti di interessi, frodi e corruzione**
-- **Assenza doppio finanziamento**
-- **Parità di genere** — Protezione e valorizzazione dei giovani
-- **Superamento divari territoriali** — Inclusione lavorativa persone con disabilità
-- **Principio DNSH** — Art. 17 Reg. (UE) 2020/852, non arrecare danno significativo agli obiettivi ambientali
-- **Conformità normativa** — Rispetto della normativa nazionale ed europea applicabile
+L'assessment è allineato ai pilastri fondamentali del modello:
 
----
+- **Transizione Digitale ed Etica** — IA, blockchain e IoT con approccio human-centric (Rome Call for AI Ethics)
+- **Sostenibilità Integrale** — Allineamento agli SDGs dell'Agenda 2030 ONU
+- **IA come Oracolo Digitale** — Facilitatore analitico e predittivo a supporto delle decisioni umane
+- **Sensers e Oracolo di Senso** — Sistema collaborativo esperti-comunità per orientare la tecnologia al bene comune
 
-## 7. NOTE METODOLOGICHE
+### Coerenza con Obiettivi UE e Nazionali
 
-L'assessment è stato condotto utilizzando un questionario strutturato basato sui principi di governance trasparente, partecipazione dei cittadini e conformità normativa. La valutazione copre 7 aree tematiche con 21 domande a risposta multipla pesata.
-
-L'assessment è stato realizzato da esperti in governance digitale e innovazione della PA, assicurando un'analisi contestualizzata e l'elaborazione di raccomandazioni operative orientate al rafforzamento della trasparenza e della partecipazione.
+- **European Green Deal** — Neutralità climatica e economia circolare
+- **Digital Europe Programme** — Rafforzamento capacità digitali
+- **PNRR** — Digitalizzazione, sostenibilità e inclusione
+- **Strategia Nazionale per lo Sviluppo Sostenibile** — Agenda 2030
 
 ---
 
@@ -1153,9 +1202,8 @@ L'assessment è stato realizzato da esperti in governance digitale e innovazione
     return report
 
 
-def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: Dict) -> str:
+def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: Dict, assessment_info: Dict = None) -> str:
     """Genera il report per l'Audit di Maturità del Patto di Senso"""
-    from datetime import datetime
     
     org_name = organization_info.get("name", "Organizzazione")
     org_type = organization_info.get("type", "azienda")
@@ -1163,7 +1211,8 @@ def generate_patto_di_senso_report(analysis: Dict[str, Any], organization_info: 
     sector = organization_info.get("sector", "Non specificato")
     size = organization_info.get("size", "Non specificata")
     
-    current_date = datetime.now().strftime("%d/%m/%Y")
+    assessment_date = get_assessment_date(assessment_info or {})
+    current_date = assessment_date.strftime("%d/%m/%Y")
     overall_score = analysis.get("overall_maturity", 0)
     maturity_label = analysis.get("maturity_label", "Iniziale")
     scores = analysis.get("scores", {})

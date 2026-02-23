@@ -23,6 +23,7 @@ async def run_migrations():
             ("assessments", "audit_sheet", "TEXT"),
             ("organizations", "program", "VARCHAR(50) DEFAULT 'dma'"),
             ("organizations", "plain_password", "VARCHAR(255)"),
+            ("assessments", "custom_date", "TIMESTAMP"),
         ]
         for table, column, col_type in migrations:
             try:
