@@ -132,8 +132,13 @@ async def google_login(
                 detail="Email non trovata nel token Google"
             )
         
+        program = google_data.program or "dma"
+        
         result = await db.execute(
-            select(Organization).where(Organization.email == email)
+            select(Organization).where(
+                Organization.email == email,
+                Organization.program == program
+            )
         )
         organization = result.scalar_one_or_none()
         
@@ -152,7 +157,7 @@ async def google_login(
                 name=name,
                 type=google_data.org_type,
                 email=email,
-                program=google_data.program or "dma",
+                program=program,
                 access_code=access_code,
                 hashed_password=get_password_hash(access_code),
                 plain_password=access_code
