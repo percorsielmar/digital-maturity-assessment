@@ -20,11 +20,6 @@ class PasswordResetRequest(BaseModel):
     new_password: str
     admin_key: str
 
-class UpdateAssessmentDateRequest(BaseModel):
-    assessment_id: int
-    custom_date: str  # ISO format: "2024-01-15T10:30:00"
-    admin_key: str
-
 def verify_admin_key(admin_key: str):
     if admin_key != ADMIN_SECRET:
         raise HTTPException(
@@ -180,42 +175,6 @@ async def reset_password(
         "organization_id": organization.id,
         "access_code": organization.access_code
     }
-
-@router.post("/update-assessment-date")
-async def update_assessment_date(
-    request: UpdateAssessmentDateRequest,
-    db: AsyncSession = Depends(get_db)
-):
-    verify_admin_key(request.admin_key)
-    
-    result = await db.execute(
-        select(Assessment).where(Assessment.id == request.assessment_id)
-    )
-    assessment = result.scalar_one_or_none()
-    
-    if not assessment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Assessment non trovato"
-        )
-    
-    from datetime import datetime
-    try:
-        custom_date = datetime.fromisoformat(request.custom_date.replace('Z', '+00:00'))
-        assessment.custom_date = custom_date
-        await db.commit()
-        
-        return {
-            "success": True,
-            "message": f"Data assessment aggiornata",
-            "assessment_id": assessment.id,
-            "custom_date": custom_date.isoformat()
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Formato data non valido: {str(e)}"
-        )
 
 @router.delete("/assessments/{assessment_id}")
 async def delete_assessment(
